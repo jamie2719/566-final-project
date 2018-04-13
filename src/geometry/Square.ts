@@ -13,30 +13,31 @@ class Square extends Drawable {
   constructor(center: vec3) {
     super(); // Call the constructor of the super class. This is required.
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
+
+    this.indices = new Uint32Array([0, 1, 2,
+                                    0, 2, 3]);
+    this.normals = new Float32Array([0, 0, 1, 0,
+                                      0, 0, 1, 0,
+                                      0, 0, 1, 0,
+                                      0, 0, 1, 0]);
+    this.positions = new Float32Array([-1, -1, 0, 1,
+                                        1, -1, 0, 1,
+                                        1, 1, 0, 1,
+                                        -1, 1, 0, 1]);
+    this.colors = new Float32Array([
+                                    1.0, 0.5, 0.5, 1.0,
+                                    1.0, 0.5, 0.5, 1.0,
+                                    1.0, 0.5, 0.5, 1.0,
+                                    1.0, 0.5, 0.5, 1.0
+                                    ]);
+    this.uvs = new Float32Array([0, 0,
+                                  1, 0, 
+                                  1, 1,
+                                  0, 1]);
   }
 
   create() {
 
-  this.indices = new Uint32Array([0, 1, 2,
-                                  0, 2, 3]);
-  this.normals = new Float32Array([0, 0, 1, 0,
-                                   0, 0, 1, 0,
-                                   0, 0, 1, 0,
-                                   0, 0, 1, 0]);
-  this.positions = new Float32Array([-1, -1, 0, 1,
-                                     1, -1, 0, 1,
-                                     1, 1, 0, 1,
-                                     -1, 1, 0, 1]);
-  this.colors = new Float32Array([
-    1.0, 0.5, 0.5, 1.0,
-    1.0, 0.5, 0.5, 1.0,
-    1.0, 0.5, 0.5, 1.0,
-    1.0, 0.5, 0.5, 1.0
-    ]);
-  this.uvs = new Float32Array([0, 0,
-                               1, 0, 
-                               1, 1,
-                               0, 1]);
     this.generateIdx();
     this.generatePos();
     this.generateNor();
