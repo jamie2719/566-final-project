@@ -1,4 +1,4 @@
-import {vec3} from 'gl-matrix';
+import {vec3, vec2, vec4, mat4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
@@ -21,6 +21,8 @@ let square: Square;
 
 let obj0: string;
 let mesh0: Mesh;
+let obj1: string;
+let plane: Mesh;
 
 let tex0: Texture;
 
@@ -39,21 +41,23 @@ var timer = {
 
 
 function loadOBJText() {
-  obj0 = readTextFile('../resources/obj/wahoo.obj')
+  obj0 = readTextFile('../resources/obj/alpaca.obj')
+  obj1 = readTextFile('../resources/obj/plane.obj')
 }
 
 
 function loadScene() {
   square && square.destroy();
   mesh0 && mesh0.destroy();
+  plane && plane.destroy();
 
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
+  plane = new Mesh(obj1, vec3.fromValues(0, 0, 0));
+  plane.create();
 
   mesh0 = new Mesh(obj0, vec3.fromValues(0, 0, 0));
   mesh0.create();
 
-  tex0 = new Texture('../resources/textures/wahoo.bmp')
+  tex0 = new Texture('../resources/textures/alpaca.jpg')
 }
 
 
@@ -83,8 +87,9 @@ function main() {
   loadScene();
 
   const camera = new Camera(vec3.fromValues(0, 9, 25), vec3.fromValues(0, 9, 0));
+  let lightPos = vec4.fromValues(14, 14, 14, 1);
 
-  const renderer = new OpenGLRenderer(canvas);
+  const renderer = new OpenGLRenderer(canvas, lightPos);
   renderer.setClearColor(0, 0, 0, 1);
   gl.enable(gl.DEPTH_TEST);
 
@@ -95,12 +100,29 @@ function main() {
 
   standardDeferred.setupTexUnits(["tex_Color"]);
 
+  let lightModelMatrix = mat4.create();
+  standardDeferred.setLightModelMatrix(lightModelMatrix);
+
+  let lightViewMatrix = mat4.create();
+  mat4.lookAt(lightViewMatrix, vec3.fromValues(lightPos[0], lightPos[1], lightPos[2]), vec3.create(), vec3.fromValues(0, 1, 0));
+  standardDeferred.setLightViewMatrix(lightViewMatrix);
+
+  let lightProjMatrix = mat4.create();
+  mat4.perspective(lightProjMatrix, camera.fovy, camera.aspectRatio, camera.near, camera.far);
+  standardDeferred.setLightProjMatrix(lightProjMatrix);
+
+  renderer.setLightMatrices(lightModelMatrix, lightViewMatrix, lightProjMatrix);
+
   function tick() {
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     timer.updateTime();
     renderer.updateTime(timer.deltaTime, timer.currentTime);
+
+    renderer.setDimensions(vec2.fromValues(window.innerWidth, window.innerHeight));
+    standardDeferred.setLightPos(vec4.fromValues(4, 4, 4, 1));
+   // standardDeferred.setLightMatrix(vec3.fromValues(4, 4, 4));
 
     standardDeferred.bindTexToUnit("tex_Color", tex0, 0);
 
@@ -109,7 +131,7 @@ function main() {
 
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
-    renderer.renderToGBuffer(camera, standardDeferred, [mesh0]);
+    renderer.renderToGBuffer(camera, standardDeferred, [mesh0, plane]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color

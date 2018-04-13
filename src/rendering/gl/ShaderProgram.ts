@@ -1,4 +1,4 @@
-import {vec4, mat4} from 'gl-matrix';
+import {vec4, mat4, vec2, vec3} from 'gl-matrix';
 import Drawable from './Drawable';
 import Texture from './Texture';
 import {gl} from '../../globals';
@@ -34,6 +34,13 @@ class ShaderProgram {
   unifProj: WebGLUniformLocation;
   unifColor: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+  unifDim: WebGLUniformLocation;
+  unifLight: WebGLUniformLocation;
+  unifViewToLightMat: WebGLUniformLocation;
+
+  unifLightModel: WebGLUniformLocation;
+  unifLightView: WebGLUniformLocation;
+  unifLightProj: WebGLUniformLocation;
 
   unifTexUnits: Map<string, WebGLUniformLocation>;
 
@@ -58,7 +65,15 @@ class ShaderProgram {
     this.unifView = gl.getUniformLocation(this.prog, "u_View");
     this.unifProj = gl.getUniformLocation(this.prog, "u_Proj");
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
-    this.unifTime = gl.getUniformLocation(this.prog, "u_Time")
+    this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
+    this.unifDim = gl.getUniformLocation(this.prog, "u_Dimensions");
+    this.unifLight = gl.getUniformLocation(this.prog, "u_LightPos");
+
+    this.unifLightModel = gl.getUniformLocation(this.prog, "u_LightModel");
+    this.unifLightView = gl.getUniformLocation(this.prog, "u_LightView");
+    this.unifLightProj = gl.getUniformLocation(this.prog, "u_LightProj");
+
+    this.unifViewToLightMat = gl.getUniformLocation(this.prog, "u_ViewToLightMat");
 
     this.unifTexUnits = new Map<string, WebGLUniformLocation>();
   }
@@ -108,6 +123,20 @@ class ShaderProgram {
     }
   }
 
+  setLightModelMatrix(model: mat4) {
+    this.use();
+    if (this.unifLightModel !== -1) {
+      gl.uniformMatrix4fv(this.unifLightModel, false, model);
+    }
+  }
+
+   setViewToLightMatrix(m: mat4) {
+     this.use();
+     if (this.unifViewToLightMat !== -1) {
+        gl.uniformMatrix4fv(this.unifViewToLightMat, false, m);
+     }
+   }
+
   setViewProjMatrix(vp: mat4) {
     this.use();
     if (this.unifViewProj !== -1) {
@@ -122,10 +151,24 @@ class ShaderProgram {
     }
   }
 
+  setLightViewMatrix(vp: mat4) {
+    this.use();
+    if (this.unifLightView !== -1) {
+      gl.uniformMatrix4fv(this.unifLightView, false, vp);
+    }
+  }
+
   setProjMatrix(vp: mat4) {
     this.use();
     if (this.unifProj !== -1) {
       gl.uniformMatrix4fv(this.unifProj, false, vp);
+    }
+  }
+
+  setLightProjMatrix(vp: mat4) {
+    this.use();
+    if (this.unifLightProj !== -1) {
+      gl.uniformMatrix4fv(this.unifLightProj, false, vp);
     }
   }
 
@@ -140,6 +183,20 @@ class ShaderProgram {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, t);
+    }
+  }
+
+  setDimensions(d: vec2) {
+    this.use();
+    if (this.unifDim !== -1) {
+      gl.uniform2fv(this.unifDim, d);
+    }
+  }
+
+  setLightPos(l: vec4) {
+    this.use();
+    if (this.unifLight !== -1) {
+      gl.uniform4fv(this.unifLight, l);
     }
   }
 

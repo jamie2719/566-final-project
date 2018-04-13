@@ -16,14 +16,28 @@ uniform float u_Time;
 uniform mat4 u_View;
 uniform vec4 u_CamPos;   
 
+uniform vec4 u_LightPos;
 
 void main() { 
 	// read from GBuffers
 
-	vec4 gb2 = texture(u_gb2, fs_UV);
+	vec3 fs_Nor = vec3(texture(u_gb0, fs_UV));
+	//vec4 meshOverlap = texture(u_gb1, fs_UV);
+	 vec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
 
-	vec3 col = gb2.xyz;
-	col = gb2.xyz;
+	// lambertian term for blinn 
+	float diffuseTerm = dot(normalize(vec4(fs_Nor, 0.0)), normalize(u_LightPos));
+	diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);
 
-	out_Col = vec4(col, 1.0);
+	float ambientTerm = 0.2;
+
+	float lightIntensity = diffuseTerm + ambientTerm; 
+	 
+	 //if(meshOverlap == vec4(1.0)) {
+		out_Col = diffuseColor;// * lightIntensity;
+	// } else {
+	//	 out_Col = skyShader();
+	 //}
+	 
+	
 }
