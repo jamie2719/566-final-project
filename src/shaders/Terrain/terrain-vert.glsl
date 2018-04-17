@@ -84,18 +84,18 @@ void main()
 {
      // terrain noise calculation
     float summedNoise = 0.0;
-    float amplitude = 10.0;//u_mountainHeight;
+    float amplitude = 2.5;//u_mountainHeight;
     float val;
-    for(int i = 2; i <= 64; i *= 2) {
+    for(int i = 2; i <= 128; i *= 2) {
         vec3 pos = vec3(vs_Pos) * 1.5f * float(i);
         val = trilinearInterpolation(pos);
         summedNoise += val * amplitude;
         amplitude *= 0.5;
     }
 
-    val =  summedNoise * .2;
+    val =  summedNoise * .6;
      vec4 offsetPos = vec4(val * vs_Pos.rgb, 0.0);
-    //offset = val;
+    offset = val;
 
 
     fs_Col = offsetPos;//vs_Col;
@@ -109,15 +109,15 @@ void main()
     //fs_Pos = u_View * u_Model * vs_Pos;
     
     vec4 modelposition;
-    // if(val < 0.0f) {
-    //    modelposition = u_Model * (vs_Pos + .2 * offsetPos); // decrease valleys
-    // }
-    // else {
-       modelposition = u_Model * (vs_Pos+offsetPos);// + offsetPos); 
-       //modelposition = u_Model * (vs_Pos + vec4(0.0, vs_Pos.y + 5.f * cos(vs_Pos.x / 10.f * 3.14), 0.0, 0.0));
-  
-   // }
-   //modelposition = u_Model * (vs_Pos + vec4(val + vs_Pos.x, 0.0, 0.0, 0.0));
+    if(val < 0.0f) {
+        //modelposition = u_Model * (vs_Pos + .2 * offsetPos); // decrease valleys
+        modelposition = u_Model * (vs_Pos + vec4(0.0, .2 * val + vs_Pos.y, 0.0, 0.0));
+    }
+    else {
+        //modelposition = u_Model * (vs_Pos+offsetPos);
+        modelposition = u_Model * (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
+       
+    }
 
-    gl_Position = u_Proj * u_View * modelposition;
+    gl_Position = u_Proj * u_View * modelposition; 
 }

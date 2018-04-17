@@ -29,6 +29,7 @@ let ground: Mesh;
 // let ground: Cube;
 
 let tex0: Texture;
+let tex1: Texture;
 
 
 var timer = {
@@ -46,7 +47,7 @@ var timer = {
 
 function loadOBJText() {
   obj0 = readTextFile('../resources/obj/wahoo.obj')
-  obj1 = readTextFile('../resources/obj/cube.obj')
+  obj1 = readTextFile('../resources/obj/ground.obj')
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -120,6 +121,7 @@ function loadScene() {
   mesh0.create();
 
    tex0 = new Texture('../resources/textures/wahoo.bmp')
+   tex1 = new Texture('../resources/textures/grass.bmp')
 }
 
 
@@ -165,7 +167,7 @@ function main() {
     ]);
 
   standardDeferred.setupTexUnits(["tex_Color"]);
-  standardTerrain.setupTexUnits(["tex_Color"]);
+  standardTerrain.setupTexUnits(["tex_Color1"]);
 
   function tick() {
     camera.update();
@@ -175,7 +177,7 @@ function main() {
     renderer.updateTime(timer.deltaTime, timer.currentTime);
 
     standardDeferred.bindTexToUnit("tex_Color", tex0, 0);
-    standardTerrain.bindTexToUnit("tex_Color", tex0, 0);
+    standardTerrain.bindTexToUnit("tex_Color1", tex1, 0);
 
     renderer.clear();
     renderer.clearGB();
