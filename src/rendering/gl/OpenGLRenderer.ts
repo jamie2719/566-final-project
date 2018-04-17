@@ -15,6 +15,8 @@ class OpenGLRenderer {
                              // gbTargets[0] to store 32-bit values, while the rest
                              // of the array stores 8-bit values. You can modify
                              // this if you want more 32-bit storage.
+  shadowBuffer: WebGLFramebuffer;
+  shadowTexture: WebGLTexture;
 
   depthTexture: WebGLTexture; // You don't need to interact with this, it's just
                               // so the OpenGL pipeline can do depth sorting
@@ -47,14 +49,6 @@ class OpenGLRenderer {
     new Shader(gl.FRAGMENT_SHADER, require('../../shaders/brushStrokes.glsl'))
   );
 
-  blendPaint :  PostProcess = new PostProcess(
-      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/blendPaint.glsl'))
-  );
-
-  shadowMap :  PostProcess = new PostProcess(
-    new Shader(gl.FRAGMENT_SHADER, require('../../shaders/shadowMap.glsl'))
-);
-
   lightPos: vec4 = vec4.fromValues(4, 2, 6, 1);
 
 
@@ -72,7 +66,7 @@ class OpenGLRenderer {
     this.lightPos = lightPos;
 
     this.currentTime = 0.0;
-    this.gbTargets = [undefined, undefined, undefined];
+    this.gbTargets = [undefined, undefined, undefined, undefined];
     this.post8Buffers = [undefined, undefined];
     this.post8Targets = [undefined, undefined];
     this.post8Passes = [];
@@ -83,13 +77,8 @@ class OpenGLRenderer {
 
     // TODO: these are placeholder post shaders, replace them with something good
     this.add8BitPass(this.brushStrokes);
-    this.add8BitPass(this.blendPaint);
 
-    //this.add32BitPass(this.shadowMap);
-
-    //this.shadowMap.setLightMatrix(vec3.fromValues(this.lightPos[0], this.lightPos[1], this.lightPos[2]));
     this.deferredShader.setLightPos(this.lightPos);
-    this.shadowMap.setLightPos(this.lightPos);
     
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -102,39 +91,54 @@ class OpenGLRenderer {
     var gb0loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb0");
     var gb1loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb1");
     var gb2loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb2");
+    var shadowMapTex = gl.getUniformLocation(this.deferredShader.prog, "shadowMapTex");
 
     this.deferredShader.use();
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
+    gl.uniform1i(shadowMapTex, 3);
 
-    var originalImage = gl.getUniformLocation(this.blendPaint.prog, "originalImage");
-    this.blendPaint.use();
-    gl.uniform1i(originalImage, 1);
-
-    var localPos = gl.getUniformLocation(this.shadowMap.prog, "localPos");
-    var lightDepth = gl.getUniformLocation(this.shadowMap.prog, "lightDepth");
-    this.shadowMap.use();
-    gl.uniform1i(localPos, 1);
-    gl.uniform1i(lightDepth, 2);
   }
-
 
   setClearColor(r: number, g: number, b: number, a: number) {
     gl.clearColor(r, g, b, a);
   }
 
-
   setSize(width: number, height: number) {
     console.log(width, height);
     this.canvas.width = width;
     this.canvas.height = height;
+/*
+    // SHADOW MAP CREATION START
+    this.shadowBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
 
+    this.shadowTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
+    
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.shadowTexture, 0);
+
+    var FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
+        console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use FBO[0]\n");
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    /// END SHADOW MAP BUFFER SET UP
+
+*/
     // --- GBUFFER CREATION START ---
     // refresh the gbuffers
     this.gBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
 
     for (let i = 0; i < this.gbTargets.length; i ++) {
       this.gbTargets[i] = gl.createTexture();
@@ -152,7 +156,9 @@ class OpenGLRenderer {
       }
 
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, this.gbTargets[i], 0);
+    
     }
+
     // depth attachment
     this.depthTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
@@ -238,7 +244,7 @@ class OpenGLRenderer {
   }
 
 
-  renderToGBuffer(camera: Camera, gbProg: ShaderProgram, drawables: Array<Drawable>) {
+  renderToGBuffer(camera: Camera, light: Camera, gbProg: ShaderProgram, shadowProg: ShaderProgram, drawables: Array<Drawable>) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.enable(gl.DEPTH_TEST);
@@ -261,6 +267,32 @@ class OpenGLRenderer {
 
     for (let drawable of drawables) {
       gbProg.draw(drawable);
+    }
+
+    // do same thing but from the light camera
+/*
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.enable(gl.DEPTH_TEST);
+*/
+    let modelL = mat4.create();
+    let viewProjL = mat4.create();
+    let viewL = light.viewMatrix;
+    let projL = light.projectionMatrix;
+    let colorL = vec4.fromValues(0.5, 0.5, 0.5, 1);
+
+    mat4.identity(modelL);
+    mat4.multiply(viewProjL, light.projectionMatrix, light.viewMatrix);
+    shadowProg.setModelMatrix(modelL);
+    shadowProg.setViewProjMatrix(viewProjL);
+    shadowProg.setGeometryColor(color);
+    shadowProg.setViewMatrix(viewL);
+    shadowProg.setProjMatrix(projL);
+
+    shadowProg.setTime(this.currentTime);
+
+    for (let drawable of drawables) {
+      shadowProg.draw(drawable);
     }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -288,36 +320,35 @@ class OpenGLRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
-
-  renderShadows() {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[1]); // write to
+  // TODO: pass any info you need as args
+  renderPostProcessHDR() {
+        // TODO: replace this with your post 32-bit pipeline
+    // the loop shows how to swap between frame buffers and textures given a list of processes,
+    // but specific shaders (e.g. bloom) need specific info as textures
+    let i = 0;
+    for (i = 0; i < this.post32Passes.length; i++){
+      // Pingpong framebuffers for each pass.
+      // In other words, repeatedly flip between storing the output of the
+      // current post-process pass in post32Buffers[1] and post32Buffers[0].
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[(i + 1) % 2]);
 
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.disable(gl.DEPTH_TEST);
       gl.enable(gl.BLEND);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+      // Recall that each frame buffer is associated with a texture that stores
+      // the output of a render pass. post32Targets is the array that stores
+      // these textures, so we alternate reading from the 0th and 1th textures
+      // each frame (the texture we wrote to in our previous render pass).
       gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]); // read from
+      gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]);
 
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[1]); // local vertex positions
-
-      gl.activeTexture(gl.TEXTURE2);
-      gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[0]); // depth
-
-      this.shadowMap.draw();
+      this.post32Passes[i].draw();
 
       // bind default frame buffer
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  }
-
-  // TODO: pass any info you need as args
-  renderPostProcessHDR() {
-    // TODO: replace this with your post 32-bit pipeline
-    // the loop shows how to swap between frame buffers and textures given a list of processes,
-    // but specific shaders (e.g. bloom) need specific info as textures
-    this.renderShadows();
+    }
 
     // apply tonemapping
     // TODO: if you significantly change your framework, ensure this doesn't cause bugs!
@@ -337,8 +368,7 @@ class OpenGLRenderer {
 
     gl.activeTexture(gl.TEXTURE0);
     // bound texture is the last one processed before
-
-    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[1]);
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[Math.max(0, i) % 2]);
 
     this.tonemapPass.draw();
 
@@ -347,37 +377,6 @@ class OpenGLRenderer {
 
   // TODO: pass any info you need as args
   renderPostProcessLDR() {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[1]); // write brush strokes first buffer
-
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.disable(gl.DEPTH_TEST);
-    gl.enable(gl.BLEND);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[0]); // read from original image
-
-    this.brushStrokes.draw();
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[2]); // write brush strokes first buffer
-
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.disable(gl.DEPTH_TEST);
-    gl.enable(gl.BLEND);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[1]); // read from brush lines image
-
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[0]); // original image
-
-    this.blendPaint.draw();
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-
-    /*
     // TODO: replace this with your post 8-bit pipeline
     // the loop shows how to swap between frame buffers and textures given a list of processes,
     // but specific shaders (e.g. motion blur) need specific info as textures
@@ -400,7 +399,7 @@ class OpenGLRenderer {
       // bind default
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
-    */
+    
   }
 
 setDimensions(dim: vec2)
@@ -410,11 +409,10 @@ setDimensions(dim: vec2)
   }
  }
 
- setLightMatrices(lightModelMatrix: mat4, lightViewMatrix: mat4, lightProjMatrix: mat4){
-   let viewToLight = mat4.create();
-    mat4.multiply(viewToLight, lightViewMatrix, lightModelMatrix);
-    mat4.multiply(viewToLight, lightProjMatrix,lightViewMatrix);
-    this.shadowMap.setViewToLightMatrix(viewToLight);
+ setLightMatrices(shadowMat: mat4, proj: mat4, view: mat4){
+    this.deferredShader.setShadowMat(shadowMat);
+    this.deferredShader.setLightProjMatrix(proj);
+    this.deferredShader.setLightViewMatrix(view);
  }
 };
 

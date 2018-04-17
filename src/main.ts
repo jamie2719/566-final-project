@@ -87,9 +87,9 @@ function main() {
   loadScene();
 
   const camera = new Camera(vec3.fromValues(0, 9, 25), vec3.fromValues(0, 9, 0));
-  let lightPos = vec4.fromValues(14, 14, 14, 1);
+  const light = new Camera(vec3.fromValues(4, 4, 4), camera.target);
 
-  const renderer = new OpenGLRenderer(canvas, lightPos);
+  const renderer = new OpenGLRenderer(canvas, vec4.fromValues(light.position[0], light.position[1], light.position[2], 1));
   renderer.setClearColor(0, 0, 0, 1);
   gl.enable(gl.DEPTH_TEST);
 
@@ -98,20 +98,25 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/standard-frag.glsl')),
     ]);
 
+    const shadowDeferred = new ShaderProgram([
+      new Shader(gl.VERTEX_SHADER, require('./shaders/shadow-vert.glsl')),
+      new Shader(gl.FRAGMENT_SHADER, require('./shaders/shadow-frag.glsl')),
+      ]);
+
   standardDeferred.setupTexUnits(["tex_Color"]);
+  shadowDeferred.setupTexUnits(["tex_Color"]);
 
-  let lightModelMatrix = mat4.create();
-  standardDeferred.setLightModelMatrix(lightModelMatrix);
+  // TODO see if still necessary  
+  ////////////////////////////////
+  
+  // camera view to light view matrix: light view * inverse(camera view)
+  let shadowMat = mat4.create(); 
+  let invViewProj = mat4.create();
+  mat4.copy(invViewProj, camera.viewMatrix);
+  mat4.invert(invViewProj, invViewProj);
+  mat4.multiply(shadowMat, light.viewMatrix, invViewProj);
 
-  let lightViewMatrix = mat4.create();
-  mat4.lookAt(lightViewMatrix, vec3.fromValues(lightPos[0], lightPos[1], lightPos[2]), vec3.create(), vec3.fromValues(0, 1, 0));
-  standardDeferred.setLightViewMatrix(lightViewMatrix);
-
-  let lightProjMatrix = mat4.create();
-  mat4.perspective(lightProjMatrix, camera.fovy, camera.aspectRatio, camera.near, camera.far);
-  standardDeferred.setLightProjMatrix(lightProjMatrix);
-
-  renderer.setLightMatrices(lightModelMatrix, lightViewMatrix, lightProjMatrix);
+  renderer.setLightMatrices(shadowMat, light.projectionMatrix, light.viewMatrix);
 
   function tick() {
     camera.update();
@@ -121,17 +126,16 @@ function main() {
     renderer.updateTime(timer.deltaTime, timer.currentTime);
 
     renderer.setDimensions(vec2.fromValues(window.innerWidth, window.innerHeight));
-    standardDeferred.setLightPos(vec4.fromValues(4, 4, 4, 1));
-   // standardDeferred.setLightMatrix(vec3.fromValues(4, 4, 4));
 
     standardDeferred.bindTexToUnit("tex_Color", tex0, 0);
+    shadowDeferred.bindTexToUnit("tex_Color", tex0, 0); 
 
     renderer.clear();
     renderer.clearGB();
 
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
-    renderer.renderToGBuffer(camera, standardDeferred, [mesh0, plane]);
+    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [mesh0, plane]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
