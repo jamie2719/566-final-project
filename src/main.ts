@@ -104,7 +104,7 @@ function loadScene() {
 
 
   //setup ground plane
-  ground = new Mesh(groundS, vec3.fromValues(0, 0, 0));
+  ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
   // var posVectors = VBOtoVec4(ground.positions);
   // var norVectors = VBOtoVec4(ground.normals);
   // var groundRot = mat4.create();
@@ -128,7 +128,7 @@ function loadScene() {
   
   ground.create();
 
-  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0));
+  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), 1);
   alpaca.create();
 
 
@@ -164,7 +164,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 9, 60), vec3.fromValues(0, 9, 0));
+  const camera = new Camera(vec3.fromValues(0, 40, 100), vec3.fromValues(0, 9, 0));
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
@@ -185,10 +185,10 @@ function main() {
       new Shader(gl.FRAGMENT_SHADER, require('./shaders/shadow-frag.glsl')),
       ]);
 
-  const standardTerrain = new ShaderProgram([
-    new Shader(gl.VERTEX_SHADER, require('./shaders/Terrain/terrain-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/Terrain/terrain-frag.glsl')),
-    ]);
+  // const standardTerrain = new ShaderProgram([
+  //   new Shader(gl.VERTEX_SHADER, require('./shaders/Terrain/terrain-vert.glsl')),
+  //   new Shader(gl.FRAGMENT_SHADER, require('./shaders/Terrain/terrain-frag.glsl')),
+  //   ]);
 
   standardDeferred.setupTexUnits(["tex_Color"]);
 
@@ -217,8 +217,6 @@ function main() {
 
     standardDeferred.bindTexToUnit("tex_Color", alpacaTex, 0);
 
-    //standardTerrain.bindTexToUnit("tex_Color1", tex1, 0);
-
 
     renderer.clear();
     renderer.clearGB();
@@ -226,8 +224,8 @@ function main() {
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
 
-    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca]);
-    renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
+    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground]);
+    //renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color

@@ -19,6 +19,7 @@ class OpenGLRenderer {
   shadowBuffer: WebGLFramebuffer;
   shadowTexture: WebGLTexture;
   shadowDepthTexture: WebGLTexture;
+  shadowTexDimensions: number = 1024.0;
 
   depthTexture: WebGLTexture; // You don't need to interact with this, it's just
                               // so the OpenGL pipeline can do depth sorting
@@ -124,7 +125,7 @@ class OpenGLRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 1024,1024, 0, gl.RGBA , gl.FLOAT, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, this.shadowTexDimensions, this.shadowTexDimensions, 0, gl.RGBA , gl.FLOAT, null);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.shadowTexture, 0);
 
     this.shadowDepthTexture = gl.createTexture();
@@ -134,7 +135,7 @@ class OpenGLRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, this.shadowTexDimensions, this.shadowTexDimensions, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.shadowDepthTexture, 0);
 
 
@@ -289,7 +290,7 @@ class OpenGLRenderer {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
     
-    gl.viewport(0, 0, 1024.0, 1024.0);
+    gl.viewport(0, 0, this.shadowTexDimensions, this.shadowTexDimensions);
     gl.enable(gl.DEPTH_TEST);
 
     this.clear();

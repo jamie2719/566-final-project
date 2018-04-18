@@ -8,15 +8,17 @@ class Mesh extends Drawable {
   positions: Float32Array;
   normals: Float32Array;
   colors: Float32Array;
+  types: Float32Array;
   uvs: Float32Array;
   center: vec4;
+  type: number;
 
   objString: string;
 
-  constructor(objString: string, center: vec3) {
+  constructor(objString: string, center: vec3, type: number) {
     super(); // Call the constructor of the super class. This is required.
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
-
+    this.type = type;
     this.objString = objString;
   }
 
@@ -44,7 +46,9 @@ class Mesh extends Drawable {
 
     // white vert color for now
     this.colors = new Float32Array(posTemp.length);
+    this.types = new Float32Array(posTemp.length);
     for (var i = 0; i < posTemp.length; ++i){
+      this.types[i] = this.type;
       this.colors[i] = 1.0;
     }
 
@@ -58,6 +62,7 @@ class Mesh extends Drawable {
     this.generateNor();
     this.generateUV();
     this.generateCol();
+    this.generateType();
 
     this.count = this.indices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
@@ -74,6 +79,10 @@ class Mesh extends Drawable {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bufUV);
     gl.bufferData(gl.ARRAY_BUFFER, this.uvs, gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bufType);
+    gl.bufferData(gl.ARRAY_BUFFER, this.types, gl.STATIC_DRAW);
+
 
     console.log(`Created Mesh from OBJ`);
     this.objString = ""; // hacky clear

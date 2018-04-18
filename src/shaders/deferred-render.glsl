@@ -38,31 +38,8 @@ float linearize(float depth) {
 	return z;
 }
 
-bool isVisible() {
+bool isVisible(float depth) {
 
-/*
-    // take it into light view space
-    //vec4 lightViewPos = u_ShadowMat * textcamViewPos;
-    //float currDepth = lightViewPos.z;
-    
-    // take into screen space to sample texture
-    vec4 screenSpaceLightPos = u_LightProj * lightViewPos;
-    screenSpaceLightPos /= screenSpaceLightPos.w;
-    screenSpaceLightPos.x = (screenSpaceLightPos.x + 1.0) / 2.0;
-    screenSpaceLightPos.y = (1.0 - screenSpaceLightPos.y) / 2.0;
-
-    // sample the texture to get depth that light sees
-    float shadowMapDepth = texture(shadowMapTex, screenSpaceLightPos.xy).z;
-
-	return shadowMapDepth > currDepth;
-	*/
-	return false;
-}
-
-void main() { 
-	// read from GBuffers
-	vec4 fs_Nor = texture(u_gb0, fs_UV);
-	float depth = fs_Nor.w;
 	vec2 xy = fs_UV;
 	xy = xy * 2.0 - vec2(1.0);
 	
@@ -71,7 +48,6 @@ void main() {
 	camWorldPos /= camWorldPos.w;
 
 	vec4 lightProjPos = u_viewProjOrthoMat * camWorldPos;
-	//lightProjPos /= lightProjPos.w;
 
 	float currDepth = lightProjPos.z;
 
@@ -81,44 +57,43 @@ void main() {
 	//return;
 	if(screenSpaceLightPos.x < 0.0 || screenSpaceLightPos.x > 1.0 || screenSpaceLightPos.y < 0.0 || screenSpaceLightPos.y > 1.0) {
 		out_Col = vec4(0.0);
-		return;
+		//return;
 	}
 	
 	float mapDepth = texture(shadowMapTex, screenSpaceLightPos).r;
 
 	if(mapDepth < currDepth - .02) {
-		out_Col = vec4((texture(u_gb2, fs_UV)).xyz, 1.0) * 0.5;
-	} else {
-		out_Col = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
-	}
-	//float ssample =texture(shadowMapTex, fs_UV).r;
-	//out_Col.rgb = clamp(vec3(mapDepth),0.0, 1.0);
-	return;
-/*
+		return false;
+	} 
+	return true;
+}
+
+void main() { 
+	// read from GBuffers
+	vec4 fs_Nor = texture(u_gb0, fs_UV);
+	
 	vec4 meshOverlap = texture(u_gb1, fs_UV);
 	vec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
+
 	// lambertian term for blinn 
 	float diffuseTerm = dot(normalize(vec4(fs_Nor.xyz, 0.0)), normalize(u_LightPos));
 	diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);
 
-	float ambientTerm = 0.2;
+	float ambientTerm = 0.4;
 
 	float lightIntensity = diffuseTerm + ambientTerm; 
-	 
-	 
-	 if(meshOverlap.w == 1.0) {
-		out_Col = diffuseColor;// * lightIntensity;
-		//out_Col = vec4((texture(shadowMapTex, fs_UV)).xyz, 1.0);
-	 } else {
-		 out_Col = skyShader();
-	 }
-	 
-	 float ssample = texture(shadowMapTex, fs_UV).r;
-	 //out_Col.rgb = vec3(ssample);
-	 //out_Col.r = ssample > 0.9 ? 1.0 : 0.0;
-	 //out_Col.g = ssample < 0.0 ? 1.0 : 0.0;
-	 //out_Col.rgb = vec3(ssample);
-	*/ 
+
+	//diffuseColor = diffuseColor * lightIntensity;
+
+	if(!isVisible(fs_Nor.w)) {
+		out_Col = diffuseColor * 0.5;
+	} else {
+		out_Col = vec4(diffuseColor.xyz, 1.0);
+	}
+
+	float ssample =texture(shadowMapTex, fs_UV).r;
+	//out_Col.rgb = clamp(vec3(ssample),0.0, 1.0);
+	return;
 }
 
 vec4 skyShader() {
