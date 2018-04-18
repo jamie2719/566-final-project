@@ -23,7 +23,15 @@ This week I tried my very hardest to do shadow mapping and if not for the grace 
 
 **Images**
 
-![milestone_1/terrain1]
+![](milestone_1/terrain1.png)
+
+![](milestone_1/terrain_above.png)
+
+![](milestone_1/merged_front.png)
+
+![](milestone_1/merged_behind.png)
+
+![](milestone_1/alpaca_close.png)
 
 
 
