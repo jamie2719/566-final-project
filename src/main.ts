@@ -1,10 +1,7 @@
-<<<<<<< HEAD
+
 import {vec3, vec2, vec4, mat4} from 'gl-matrix';
-||||||| merged common ancestors
-import {vec3} from 'gl-matrix';
-=======
-import {vec3, vec4, mat4} from 'gl-matrix';
->>>>>>> 8918ed38c242373df2ee9aff3fdbb2908ee538b0
+
+
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 // import Square from './geometry/Square';
@@ -167,7 +164,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 9, 25), vec3.fromValues(0, 9, 0));
+  const camera = new Camera(vec3.fromValues(0, 9, 60), vec3.fromValues(0, 9, 0));
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
