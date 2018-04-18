@@ -164,7 +164,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 40, 100), vec3.fromValues(0, 9, 0));
+  const camera = new Camera(vec3.fromValues(0, 40, 110), vec3.fromValues(0, 9, 0));
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
