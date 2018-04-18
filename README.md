@@ -9,6 +9,8 @@ This week I implemented 3D Perlin noise to procedurally generate the terrain of 
 
 Next week, my main focus will be on creating L-System trees and integrating them into the rest of the project so that they look like they belong in the terrain that I've created this week. I will create procedural textures for some components of the scene (maybe the trees or terrain) if I have time using Substance Designer. I will also continue to tweak the parameters of the terrain as the rest of the project comes together, if needed.
 
+Also, after we merged our two branches, the terrain started disappearing sometimes when we zoomed out. We are not sure why this is happening, and it did not happen at all in the earlier versions of our separate branches before the merge. We will also figure this bug out next week.
+
 
 
 
