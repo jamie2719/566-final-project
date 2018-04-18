@@ -3,6 +3,8 @@
 
 ## Milestone 1
 ## Demo: https://jamie2719.github.io/566-final-project/
+This demo link doesn't actually work yet because of the same issue people were having in the deferred renderer homework where the textures couldn't be loaded (we used the base code from that homework)- images are below
+
 
 **Jamie**
 
@@ -19,4 +21,19 @@ Also, after we merged our two branches, the terrain started disappearing sometim
 **Kathryn**
 
 This week I tried my very hardest to do shadow mapping and if not for the grace of Jin would I have anything. He showed me I needed to use an orthogonal matrix instead of perspective projection matrix and also showed me not to use the depth attachment for a shadow map. Most of my issues happened in OpenGLRenderer from lack of my lack of understanding of opengl. Jamie and I had trouble merging though and need to redesign our pipelines such that the shadows show up on the terrain she created. I also did a post processing paint effect (which looks better on the terrain than the alpaca). Next week I'll first try to smooth the shadows and then work on other post processing effects as well as textures, and backdrops for the "painting".
+
+
+**Images**
+
+![](milestone_1/terrain1.png)
+
+![](milestone_1/terrain_above.png)
+
+![](milestone_1/merged_front.png)
+
+![](milestone_1/merged_behind.png)
+
+![](milestone_1/alpaca_close.png)
+
+
 
