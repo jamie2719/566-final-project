@@ -78,7 +78,7 @@ class OpenGLRenderer {
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
-//    this.add8BitPass(this.brushStrokes);
+    this.add8BitPass(this.brushStrokes);
 
     this.deferredShader.setLightPos(this.lightPos);
     
