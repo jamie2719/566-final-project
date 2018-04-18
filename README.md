@@ -2,6 +2,7 @@
 **Jamie Schwartz and Kathryn Miller** 
 
 ## Milestone 1
+## Demo: https://jamie2719.github.io/566-final-project/
 
 **Jamie**
 
