@@ -2,7 +2,9 @@
 **Jamie Schwartz and Kathryn Miller** 
 
 ## Milestone 1
-## Demo: https://jamie2719.github.io/566-final-project/ (this demo link doesn't actually work because of the same issue people were having in the deferred renderer homework where the textures couldn't be loaded- we used the base code from that homework)
+## Demo: https://jamie2719.github.io/566-final-project/
+This demo link doesn't actually work yet because of the same issue people were having in the deferred renderer homework where the textures couldn't be loaded (we used the base code from that homework)- images are below
+
 
 **Jamie**
 
