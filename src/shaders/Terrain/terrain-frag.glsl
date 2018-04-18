@@ -36,26 +36,21 @@ void main() {
 
     vec4 diffuseColor;
     
-    // if(offset > .25) { 
-    //     diffuseColor = vec4(1.0, 1.0, 1.0, 1.0); // mountaintop
-    // } 
+    vec4 tanGrass = vec4(248.0f / 255.0f, 205.0 / 255.0f, 80.0 / 255.0f, 1.0);
+    vec4 grass = vec4(30.f / 255.f, 120.0f / 255.0f, 0.0f, 1.0);
+    vec4 hill = vec4(90.0f / 255.0f, 67.0f / 255.0f, 0.0f, 1.0f);
+
+
     if(offset > .2) { 
-        diffuseColor = vec4(90.0f / 255.0f, 67.0f / 255.0f, 0.0f, 1.0f) + vec4(landNoise * .57, 0.0, 0.0, 0.0f); // mountain
-    }
-    else if(offset > .01) { 
-        diffuseColor = mix(vec4(0.0f, 150.0f / 255.0f, 0.0f, 1.0) + vec4(0.0, landNoise, 0.0, 0.0f), vec4(90.0f / 255.0f, 67.0f / 255.0f, 0.0f, 1.0f) + vec4(landNoise * .57, 0.0, 0.0, 0.0f), 1.f-offset); //grass
+        diffuseColor = hill + vec4(landNoise * .57, 0.0, 0.0, 0.0f); // mountain
     }
     else if(offset > -.3f) {
-        diffuseColor = mix(vec4(248.0f / 255.0f, 205.0 / 255.0f, 80.0 / 255.0f, 1.0) + vec4(landNoise*.4, landNoise*.4, landNoise*.4, 0.0f), vec4(0.0f, 150.0f / 255.0f, 0.0f, 1.0) + vec4(0.0, landNoise, 0.0, 0.0f), 1.f -offset); //sand
+        diffuseColor = mix(tanGrass + vec4(landNoise*.4, landNoise*.4, landNoise*.4, 0.0f), grass + vec4(0.0, landNoise, 0.0, 0.0f), 1.f -offset); //sand
         
     }
     else { 
-        diffuseColor = mix(vec4(248.0f / 255.0f, 205.0 / 255.0f, 80.0 / 255.0f, 1.0) + vec4(landNoise*.4, landNoise*.4, landNoise*.4, 0.0f), vec4(0.0f, 150.0f / 255.0f, 0.0f, 1.0) + vec4(0.0, landNoise, 0.0, 0.0f), -1.f*offset); //sand
-        //diffuseColor = texture(tex_C)
+        diffuseColor = mix(tanGrass + vec4(landNoise*.4, landNoise*.4, landNoise*.4, 0.0f), grass + vec4(0.0, landNoise, 0.0, 0.0f), -1.f*offset); //sand
     }
-    // else {
-    //     diffuseColor = vec4(0.0f, 50.f/255.f, 1.0, 1.0);
-    // }
 
 
    

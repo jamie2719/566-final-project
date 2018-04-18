@@ -90,8 +90,9 @@ void main()
     for(int i = 2; i <= 2048; i *= 2) {
         vec3 pos = vec3(vs_Pos) * .02000f  * float(i);
         val = trilinearInterpolation(pos);
+        vec3 random = random3(vs_Pos.rgb);
         if(val > 0.f) {
-           summedNoise += val * amplitude * 6.f;
+           summedNoise += val * amplitude * 10.f;
         }
         summedNoise += val * amplitude;
         amplitude *= .3;
