@@ -341,8 +341,12 @@ class ShaderProgram {
         this.unifLightModel = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_LightModel");
         this.unifLightView = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_LightView");
         this.unifLightProj = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_LightProj");
+        this.unifLightOrtho = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_LightOrtho");
         this.unifViewToLightMat = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_WorldToLightMat");
         this.unifShadowMat = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_ShadowMat");
+        this.unifViewProjMat = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_viewProjMat");
+        this.unifViewProjOrthoMat = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_viewProjOrthoMat");
+        this.unifInvViewProjMat = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_invViewProjMat");
         this.unifTexUnits = new Map();
     }
     setupTexUnits(handleNames) {
@@ -405,6 +409,12 @@ class ShaderProgram {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniformMatrix4fv(this.unifViewProj, false, vp);
         }
     }
+    setInvViewProjMatrix(vp) {
+        this.use();
+        if (this.unifInvViewProjMat !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniformMatrix4fv(this.unifInvViewProjMat, false, vp);
+        }
+    }
     setViewMatrix(vp) {
         this.use();
         if (this.unifView !== -1) {
@@ -429,10 +439,28 @@ class ShaderProgram {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniformMatrix4fv(this.unifLightProj, false, vp);
         }
     }
+    setLightOrthoMatrix(vp) {
+        this.use();
+        if (this.unifLightOrtho !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniformMatrix4fv(this.unifLightOrtho, false, vp);
+        }
+    }
     setShadowMat(m) {
         this.use();
         if (this.unifShadowMat !== -1) {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniformMatrix4fv(this.unifShadowMat, false, m);
+        }
+    }
+    setViewProjMat(model) {
+        this.use();
+        if (this.unifViewProjMat !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniformMatrix4fv(this.unifViewProjMat, false, model);
+        }
+    }
+    setViewProjOrthoMat(model) {
+        this.use();
+        if (this.unifViewProjOrthoMat !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniformMatrix4fv(this.unifViewProjOrthoMat, false, model);
         }
     }
     setGeometryColor(color) {
@@ -3605,9 +3633,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__geometry_Mesh__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__rendering_gl_OpenGLRenderer__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Camera__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__globals__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__rendering_gl_ShaderProgram__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__rendering_gl_Texture__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__LIght__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__rendering_gl_Texture__ = __webpack_require__(72);
+
 
 
 
@@ -3621,13 +3651,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // const controls = {
 //   // Extra credit: Add interactivity
 // };
-let square;
+//let groundPlane: Cube;
 // TODO: replace with your scene's stuff
-let obj0;
-let mesh0;
-let obj1;
-let plane;
-let tex0;
+let alpacaS;
+let alpaca;
+let wahooS;
+let wahoo;
+let groundS;
+let ground;
+// let ground: Cube;
+let alpacaTex;
+let wahooTex;
 var timer = {
     deltaTime: 0.0,
     startTime: 0.0,
@@ -3640,18 +3674,71 @@ var timer = {
     },
 };
 function loadOBJText() {
-    obj0 = Object(__WEBPACK_IMPORTED_MODULE_5__globals__["b" /* readTextFile */])('../resources/obj/alpaca.obj');
-    obj1 = Object(__WEBPACK_IMPORTED_MODULE_5__globals__["b" /* readTextFile */])('../resources/obj/plane.obj');
+    alpacaS = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/alpaca.obj');
+    wahooS = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/wahoo.obj');
+    groundS = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/ground.obj');
+}
+function VBOtoVec4(arr) {
+    var vectors = new Array();
+    for (var i = 0; i < arr.length; i += 4) {
+        var currVec = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(arr[i], arr[i + 1], arr[i + 2], arr[i + 3]);
+        vectors.push(currVec);
+    }
+    return vectors;
+}
+function transformVectors(vectors, transform) {
+    for (var i = 0; i < vectors.length; i++) {
+        var newVector = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].create();
+        newVector = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].transformMat4(newVector, vectors[i], transform);
+        vectors[i] = newVector;
+    }
+    return vectors;
+}
+// Just converts from vec4 to floats for VBOs
+function Vec4toVBO(vectors) {
+    var j = 0;
+    var arr = new Float32Array(vectors.length * 4);
+    for (var i = 0; i < vectors.length; i++) {
+        var currVec = vectors[i];
+        arr[j] = currVec[0];
+        arr[j + 1] = currVec[1];
+        arr[j + 2] = currVec[2];
+        arr[j + 3] = currVec[3];
+        j += 4;
+    }
+    return arr;
 }
 function loadScene() {
-    square && square.destroy();
-    mesh0 && mesh0.destroy();
-    plane && plane.destroy();
-    plane = new __WEBPACK_IMPORTED_MODULE_2__geometry_Mesh__["a" /* default */](obj1, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
-    plane.create();
-    mesh0 = new __WEBPACK_IMPORTED_MODULE_2__geometry_Mesh__["a" /* default */](obj0, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
-    mesh0.create();
-    tex0 = new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_Texture__["a" /* default */]('../resources/textures/alpaca.jpg');
+    ground && ground.destroy();
+    alpaca && alpaca.destroy();
+    wahoo && wahoo.destroy();
+    //setup ground plane
+    ground = new __WEBPACK_IMPORTED_MODULE_2__geometry_Mesh__["a" /* default */](groundS, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
+    // var posVectors = VBOtoVec4(ground.positions);
+    // var norVectors = VBOtoVec4(ground.normals);
+    // var groundRot = mat4.create();
+    // var invRot = mat4.create();
+    // groundRot = mat4.rotateX(groundRot, groundRot, Math.PI * 90 / 180);
+    // invRot = mat4.transpose(invRot, groundRot);
+    // var groundScale = mat4.create();
+    // groundScale = mat4.scale(groundScale, groundScale, vec3.fromValues(10, 10, 10));
+    // transformVectors(posVectors, groundRot);
+    // transformVectors(norVectors,invRot);
+    // transformVectors(posVectors, groundScale);
+    // // var translation = vec4.fromValues(0, 1, 0, 0);
+    // // for(var i = 0; i < posVectors.length; i++) {
+    // //   var newVector: vec4 = vec4.create();
+    // //   newVector = vec4.add(newVector, posVectors[i], translation);
+    // //   posVectors[i] = newVector;
+    // // }
+    // ground.positions = Vec4toVBO(posVectors);
+    // ground.normals = Vec4toVBO(norVectors);
+    ground.create();
+    alpaca = new __WEBPACK_IMPORTED_MODULE_2__geometry_Mesh__["a" /* default */](alpacaS, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
+    alpaca.create();
+    alpacaTex = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_Texture__["a" /* default */]('../resources/textures/alpaca.jpg');
+    wahooTex = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_Texture__["a" /* default */]('../resources/textures/wahoo.bmp');
+    //tex1 = new Texture('../resources/textures/grass.bmp')
 }
 function main() {
     // Initial display for framerate
@@ -3671,26 +3758,29 @@ function main() {
     }
     // `setGL` is a function imported above which sets the value of `gl` in the `globals.ts` module.
     // Later, we can import `gl` from `globals.ts` to access it
-    Object(__WEBPACK_IMPORTED_MODULE_5__globals__["c" /* setGL */])(gl);
+    Object(__WEBPACK_IMPORTED_MODULE_6__globals__["c" /* setGL */])(gl);
     // Initial call to load scene
     loadScene();
-    const camera = new __WEBPACK_IMPORTED_MODULE_4__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 9, 25), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 9, 0));
-    const light = new __WEBPACK_IMPORTED_MODULE_4__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(4, 4, 4), camera.target);
+    const camera = new __WEBPACK_IMPORTED_MODULE_4__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 9, 60), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 9, 0));
+    const light = new __WEBPACK_IMPORTED_MODULE_5__LIght__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(5, 10, 5), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].create());
+    light.update();
+    light.updateProjectionMatrix();
     const renderer = new __WEBPACK_IMPORTED_MODULE_3__rendering_gl_OpenGLRenderer__["a" /* default */](canvas, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(light.position[0], light.position[1], light.position[2], 1));
     renderer.setClearColor(0, 0, 0, 1);
     gl.enable(gl.DEPTH_TEST);
-    const standardDeferred = new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_ShaderProgram__["b" /* default */]([
-        new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(72)),
-        new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(73)),
+    const standardDeferred = new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(73)),
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(74)),
     ]);
-    const shadowDeferred = new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_ShaderProgram__["b" /* default */]([
-        new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(74)),
-        new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(75)),
+    const shadowDeferred = new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(75)),
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(76)),
+    ]);
+    const standardTerrain = new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(77)),
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(78)),
     ]);
     standardDeferred.setupTexUnits(["tex_Color"]);
-    shadowDeferred.setupTexUnits(["tex_Color"]);
-    // TODO see if still necessary  
-    ////////////////////////////////
     // camera view to light view matrix: light view * inverse(camera view)
     let shadowMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
     let invViewProj = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
@@ -3698,6 +3788,8 @@ function main() {
     __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].invert(invViewProj, invViewProj);
     __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(shadowMat, light.viewMatrix, invViewProj);
     renderer.setLightMatrices(shadowMat, light.projectionMatrix, light.viewMatrix);
+    standardDeferred.setProjMatrix(camera.projectionMatrix);
+    //standardTerrain.setupTexUnits(["tex_Color1"]);
     function tick() {
         camera.update();
         stats.begin();
@@ -3705,15 +3797,16 @@ function main() {
         timer.updateTime();
         renderer.updateTime(timer.deltaTime, timer.currentTime);
         renderer.setDimensions(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* vec2 */].fromValues(window.innerWidth, window.innerHeight));
-        standardDeferred.bindTexToUnit("tex_Color", tex0, 0);
-        shadowDeferred.bindTexToUnit("tex_Color", tex0, 0);
+        standardDeferred.bindTexToUnit("tex_Color", alpacaTex, 0);
+        //standardTerrain.bindTexToUnit("tex_Color1", tex1, 0);
         renderer.clear();
         renderer.clearGB();
         // TODO: pass any arguments you may need for shader passes
         // forward render mesh info into gbuffers
-        renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [mesh0, plane]);
+        renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca]);
+        renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
         // render from gbuffers into 32-bit color buffer
-        renderer.renderFromGBuffer(camera);
+        renderer.renderFromGBuffer(camera, light);
         // apply 32-bit post and tonemap from 32-bit color to 8-bit color
         renderer.renderPostProcessHDR();
         // apply 8-bit post and draw
@@ -7911,10 +8004,10 @@ class OpenGLRenderer {
         // shader that maps 32-bit color to 8-bit color
         this.tonemapPass = new __WEBPACK_IMPORTED_MODULE_3__PostProcess__["a" /* default */](new __WEBPACK_IMPORTED_MODULE_2__ShaderProgram__["a" /* Shader */](__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAGMENT_SHADER, __webpack_require__(34)));
         this.brushStrokes = new __WEBPACK_IMPORTED_MODULE_3__PostProcess__["a" /* default */](new __WEBPACK_IMPORTED_MODULE_2__ShaderProgram__["a" /* Shader */](__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAGMENT_SHADER, __webpack_require__(35)));
-        this.lightPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(4, 2, 6, 1);
+        this.lightPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(4, 4, 4, 1);
         this.lightPos = lightPos;
         this.currentTime = 0.0;
-        this.gbTargets = [undefined, undefined, undefined, undefined];
+        this.gbTargets = [undefined, undefined, undefined];
         this.post8Buffers = [undefined, undefined];
         this.post8Targets = [undefined, undefined];
         this.post8Passes = [];
@@ -7953,36 +8046,38 @@ class OpenGLRenderer {
         console.log(width, height);
         this.canvas.width = width;
         this.canvas.height = height;
-        /*
-            // SHADOW MAP CREATION START
-            this.shadowBuffer = gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-        
-            this.shadowTexture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
-            
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.shadowTexture, 0);
-        
-            var FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-            if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-                console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use FBO[0]\n");
-            }
-        
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            /// END SHADOW MAP BUFFER SET UP
-        
-        */
+        // SHADOW MAP CREATION START
+        this.shadowBuffer = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].createFramebuffer();
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindFramebuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, this.shadowBuffer);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].drawBuffers([__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT0]);
+        this.shadowTexture = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].createTexture();
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindTexture(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, this.shadowTexture);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_MAG_FILTER, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].NEAREST);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_MIN_FILTER, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].NEAREST);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_WRAP_S, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].CLAMP_TO_EDGE);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_WRAP_T, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].CLAMP_TO_EDGE);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texImage2D(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, 0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].RGBA32F, 1024, 1024, 0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].RGBA, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, null);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].framebufferTexture2D(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, this.shadowTexture, 0);
+        this.shadowDepthTexture = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].createTexture();
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindTexture(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, this.shadowDepthTexture);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].pixelStorei(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].UNPACK_FLIP_Y_WEBGL, false);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_MAG_FILTER, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].NEAREST);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_MIN_FILTER, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].NEAREST);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_WRAP_S, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].CLAMP_TO_EDGE);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texParameteri(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_WRAP_T, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].CLAMP_TO_EDGE);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].texImage2D(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, 0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].DEPTH_COMPONENT32F, 1024, 1024, 0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].DEPTH_COMPONENT, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, null);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].framebufferTexture2D(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].DEPTH_ATTACHMENT, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, this.shadowDepthTexture, 0);
+        var FBOstatus = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].checkFramebufferStatus(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER);
+        if (FBOstatus != __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER_COMPLETE) {
+            console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use FBO[0]\n");
+        }
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindFramebuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, null);
+        /// END SHADOW MAP BUFFER SET UP
         // --- GBUFFER CREATION START ---
         // refresh the gbuffers
         this.gBuffer = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].createFramebuffer();
         __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindFramebuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, this.gBuffer);
-        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].drawBuffers([__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT1, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT2, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT3]);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].drawBuffers([__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT1, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].COLOR_ATTACHMENT2]);
         for (let i = 0; i < this.gbTargets.length; i++) {
             this.gbTargets[i] = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].createTexture();
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindTexture(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, this.gbTargets[i]);
@@ -8087,31 +8182,32 @@ class OpenGLRenderer {
         for (let drawable of drawables) {
             gbProg.draw(drawable);
         }
+        //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         // do same thing but from the light camera
-        /*
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            gl.enable(gl.DEPTH_TEST);
-        */
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindFramebuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, this.shadowBuffer);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].viewport(0, 0, 1024.0, 1024.0);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].enable(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].DEPTH_TEST);
+        this.clear();
         let modelL = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
-        let viewProjL = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        //let viewProjL = mat4.create();
         let viewL = light.viewMatrix;
-        let projL = light.projectionMatrix;
+        let projL = light.orthogonalMatrix;
         let colorL = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0.5, 0.5, 0.5, 1);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].identity(modelL);
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(viewProjL, light.projectionMatrix, light.viewMatrix);
+        //mat4.multiply(viewProjL, light.orthogonalMatrix, light.viewMatrix);
         shadowProg.setModelMatrix(modelL);
-        shadowProg.setViewProjMatrix(viewProjL);
-        shadowProg.setGeometryColor(color);
-        shadowProg.setViewMatrix(viewL);
-        shadowProg.setProjMatrix(projL);
+        //shadowProg.setViewProjMatrix(light.viewOrhtProjMatrix);
+        //shadowProg.setGeometryColor(color);
+        //shadowProg.setViewMatrix(viewL);
+        shadowProg.setViewProjOrthoMat(light.viewOrhtProjMatrix);
         shadowProg.setTime(this.currentTime);
         for (let drawable of drawables) {
             shadowProg.draw(drawable);
         }
         __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindFramebuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, null);
     }
-    renderFromGBuffer(camera) {
+    renderFromGBuffer(camera, light) {
+        // set var for deferred render
         __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindFramebuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, this.post32Buffers[0]);
         __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].viewport(0, 0, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].drawingBufferWidth, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].drawingBufferHeight);
         __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].disable(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].DEPTH_TEST);
@@ -8121,10 +8217,16 @@ class OpenGLRenderer {
         let proj = camera.projectionMatrix;
         this.deferredShader.setViewMatrix(view);
         this.deferredShader.setProjMatrix(proj);
+        this.deferredShader.setInvViewProjMatrix(camera.invViewProjMatrix);
+        this.deferredShader.setViewProjOrthoMat(light.viewOrhtProjMatrix);
+        this.deferredShader.setLightOrthoMatrix(light.orthogonalMatrix);
+        this.deferredShader.setLightViewMatrix(light.viewMatrix);
         for (let i = 0; i < this.gbTargets.length; i++) {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].activeTexture(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE0 + i);
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindTexture(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, this.gbTargets[i]);
         }
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].activeTexture(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE3);
+        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindTexture(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].TEXTURE_2D, this.shadowTexture);
         this.deferredShader.draw();
         __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindFramebuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FRAMEBUFFER, null);
     }
@@ -8198,6 +8300,7 @@ class OpenGLRenderer {
         for (let i = 0; i < this.post8Passes.length; i++) {
             this.post8Passes[i].setDimensions(dim);
         }
+        this.deferredShader.setDimensions(dim);
     }
     setLightMatrices(shadowMat, proj, view) {
         this.deferredShader.setShadowMat(shadowMat);
@@ -8260,18 +8363,16 @@ class Square extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /*
     constructor(center) {
         super(); // Call the constructor of the super class. This is required.
         this.center = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(center[0], center[1], center[2], 1);
-    }
-    create() {
         this.indices = new Uint32Array([0, 1, 2,
             0, 2, 3]);
         this.normals = new Float32Array([0, 0, 1, 0,
             0, 0, 1, 0,
             0, 0, 1, 0,
             0, 0, 1, 0]);
-        this.positions = new Float32Array([-1 + this.center[0], -1 + this.center[1], 0, 1,
-            1 + this.center[0], -1 + this.center[1], 0, 1,
-            1 + this.center[0], 1 + this.center[1], 0, 1,
-            -1 + this.center[0], 1 + this.center[1], 0, 1]);
+        this.positions = new Float32Array([-1, -1, 0, 1,
+            1, -1, 0, 1,
+            1, 1, 0, 1,
+            -1, 1, 0, 1]);
         this.colors = new Float32Array([
             1.0, 0.5, 0.5, 1.0,
             1.0, 0.5, 0.5, 1.0,
@@ -8282,6 +8383,8 @@ class Square extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /*
             1, 0,
             1, 1,
             0, 1]);
+    }
+    create() {
         this.generateIdx();
         this.generatePos();
         this.generateNor();
@@ -8315,7 +8418,7 @@ module.exports = "#version 300 es\n\n// A vertex shader used by all post-process
 /* 33 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\n#define EPS 0.0001\n#define PI 3.1415962\n\nin vec2 fs_UV;\nout vec4 out_Col;\n\nuniform sampler2D u_gb0;\nuniform sampler2D u_gb1;\nuniform sampler2D u_gb2;\nuniform sampler2D shadowMapTex;\n\nuniform mat4 u_ShadowMat;\nuniform mat4 u_LightProj;\nuniform mat4 u_LightView;\n\nuniform float u_Time;\n\nuniform mat4 u_View;\nuniform vec4 u_CamPos;   \n\nuniform vec4 u_LightPos;\n\nvec4 skyShader();\n\nbool isVisible() {\n\t// camera view pos of this fragment\n    vec4 camViewPos = texture(u_gb2, fs_UV);\n\n    // take it into light view space\n    vec4 lightViewPos = u_ShadowMat * camViewPos;\n    float currDepth = lightViewPos.z;\n    \n    // take into screen space to sample texture\n    vec4 screenSpaceLightPos = u_LightProj * lightViewPos;\n    screenSpaceLightPos /= screenSpaceLightPos.w;\n    screenSpaceLightPos.x = (screenSpaceLightPos.x + 1.0) / 2.0;\n    screenSpaceLightPos.y = (1.0 - screenSpaceLightPos.y) / 2.0;\n\n    // sample the texture to get depth that light sees\n    float shadowMapDepth = texture(shadowMapTex, screenSpaceLightPos.xy).z;\n\n\treturn shadowMapDepth > currDepth;\n}\n\nvoid main() { \n\t// read from GBuffers\n\tvec3 fs_Nor = vec3(texture(u_gb0, fs_UV));\n\tvec4 meshOverlap = texture(u_gb1, fs_UV);\n\tvec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);\n\t// lambertian term for blinn \n\tfloat diffuseTerm = dot(normalize(vec4(fs_Nor, 0.0)), normalize(u_LightPos));\n\tdiffuseTerm = clamp(diffuseTerm, 0.0, 1.0);\n\n\tfloat ambientTerm = 0.2;\n\n\tfloat lightIntensity = diffuseTerm + ambientTerm; \n\t \n\t if(meshOverlap.w == 1.0) {\n\t\tout_Col = diffuseColor;// * lightIntensity;\n\t\t//out_Col = vec4((texture(shadowMapTex, fs_UV)).xyz, 1.0);\n\t } else {\n\t\t out_Col = skyShader();\n\t }\t\n}\n\nvec4 skyShader() {\n\treturn vec4(1.0);\n}"
+module.exports = "#version 300 es\nprecision highp float;\n\n#define EPS 0.0001\n#define PI 3.1415962\n\nin vec2 fs_UV;\nout vec4 out_Col;\n\nuniform sampler2D u_gb0;\nuniform sampler2D u_gb1;\nuniform sampler2D u_gb2;\nuniform sampler2D shadowMapTex;\n\nuniform mat4 u_ShadowMat;\nuniform mat4 u_LightProj;\nuniform mat4 u_LightView;\nuniform mat4 u_LightOrtho;\n\nuniform vec2 u_Dimesnion;\n\nuniform mat4 u_invViewProjMat;\nuniform mat4 u_viewProjOrthoMat;\n\nuniform float u_Time;\n\nuniform mat4 u_View;\nuniform vec4 u_CamPos;   \n\nuniform vec4 u_LightPos;\n\nvec4 skyShader();\n\nfloat linearize(float depth) {\n\tfloat f=1000.0;\n\tfloat n = 0.1;\n\tfloat z = (2.0 * n) / (f + n - depth * (f - n));\n\treturn z;\n}\n\nbool isVisible() {\n\n/*\n    // take it into light view space\n    //vec4 lightViewPos = u_ShadowMat * textcamViewPos;\n    //float currDepth = lightViewPos.z;\n    \n    // take into screen space to sample texture\n    vec4 screenSpaceLightPos = u_LightProj * lightViewPos;\n    screenSpaceLightPos /= screenSpaceLightPos.w;\n    screenSpaceLightPos.x = (screenSpaceLightPos.x + 1.0) / 2.0;\n    screenSpaceLightPos.y = (1.0 - screenSpaceLightPos.y) / 2.0;\n\n    // sample the texture to get depth that light sees\n    float shadowMapDepth = texture(shadowMapTex, screenSpaceLightPos.xy).z;\n\n\treturn shadowMapDepth > currDepth;\n\t*/\n\treturn false;\n}\n\nvoid main() { \n\t// read from GBuffers\n\tvec4 fs_Nor = texture(u_gb0, fs_UV);\n\tfloat depth = fs_Nor.w;\n\tvec2 xy = fs_UV;\n\txy = xy * 2.0 - vec2(1.0);\n\t\n\tvec4 camProjPos = vec4(xy.xy, depth, 1.0);\n\tvec4 camWorldPos = u_invViewProjMat * camProjPos;\n\tcamWorldPos /= camWorldPos.w;\n\n\tvec4 lightProjPos = u_viewProjOrthoMat * camWorldPos;\n\t//lightProjPos /= lightProjPos.w;\n\n\tfloat currDepth = lightProjPos.z;\n\n\tvec2 screenSpaceLightPos = (lightProjPos.xy + vec2(1.0)) / 2.0;\n\tvec2 screenSpaceLightPosR = vec2(screenSpaceLightPos.x, 1.0 - screenSpaceLightPos.y);\n\t//out_Col = vec4(clamp(camWorldPos.xyz,0.0, 1.0), 1.0);\n\t//return;\n\tif(screenSpaceLightPos.x < 0.0 || screenSpaceLightPos.x > 1.0 || screenSpaceLightPos.y < 0.0 || screenSpaceLightPos.y > 1.0) {\n\t\tout_Col = vec4(0.0);\n\t\treturn;\n\t}\n\t\n\tfloat mapDepth = texture(shadowMapTex, screenSpaceLightPos).r;\n\n\tif(mapDepth < currDepth - .02) {\n\t\tout_Col = vec4((texture(u_gb2, fs_UV)).xyz, 1.0) * 0.5;\n\t} else {\n\t\tout_Col = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);\n\t}\n\t//float ssample =texture(shadowMapTex, fs_UV).r;\n\t//out_Col.rgb = clamp(vec3(mapDepth),0.0, 1.0);\n\treturn;\n/*\n\tvec4 meshOverlap = texture(u_gb1, fs_UV);\n\tvec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);\n\t// lambertian term for blinn \n\tfloat diffuseTerm = dot(normalize(vec4(fs_Nor.xyz, 0.0)), normalize(u_LightPos));\n\tdiffuseTerm = clamp(diffuseTerm, 0.0, 1.0);\n\n\tfloat ambientTerm = 0.2;\n\n\tfloat lightIntensity = diffuseTerm + ambientTerm; \n\t \n\t \n\t if(meshOverlap.w == 1.0) {\n\t\tout_Col = diffuseColor;// * lightIntensity;\n\t\t//out_Col = vec4((texture(shadowMapTex, fs_UV)).xyz, 1.0);\n\t } else {\n\t\t out_Col = skyShader();\n\t }\n\t \n\t float ssample = texture(shadowMapTex, fs_UV).r;\n\t //out_Col.rgb = vec3(ssample);\n\t //out_Col.r = ssample > 0.9 ? 1.0 : 0.0;\n\t //out_Col.g = ssample < 0.0 ? 1.0 : 0.0;\n\t //out_Col.rgb = vec3(ssample);\n\t*/ \n}\n\nvec4 skyShader() {\n\treturn vec4(1.0);\n}"
 
 /***/ }),
 /* 34 */
@@ -8342,7 +8445,11 @@ module.exports = "#version 300 es\nprecision highp float;\n\nin vec2 fs_UV;\nout
 class Camera {
     constructor(position, target) {
         this.projectionMatrix = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].create();
+        this.orthogonalMatrix = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].create();
         this.viewMatrix = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].create();
+        this.viewProjMatrix = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].create();
+        this.invViewProjMatrix = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].create();
+        this.viewOrhtProjMatrix = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].create();
         this.fovy = 45 * 3.1415962 / 180.0;
         this.aspectRatio = 1;
         this.near = 0.1;
@@ -8358,6 +8465,8 @@ class Camera {
         this.controls.mode = 'turntable';
         __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].add(this.target, this.position, this.direction);
         __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
+        var scale = 20.0;
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].ortho(this.orthogonalMatrix, -scale, scale, -scale, scale, this.near, this.far);
     }
     setAspectRatio(aspectRatio) {
         this.aspectRatio = aspectRatio;
@@ -8369,6 +8478,9 @@ class Camera {
         this.controls.tick();
         __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].add(this.target, this.position, this.direction);
         __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].multiply(this.viewProjMatrix, this.projectionMatrix, this.viewMatrix);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].invert(this.invViewProjMatrix, this.viewProjMatrix);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["a" /* mat4 */].multiply(this.viewOrhtProjMatrix, this.orthogonalMatrix, this.viewMatrix);
     }
 }
 ;
@@ -11429,6 +11541,57 @@ module.exports = true;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
+
+class Light {
+    constructor(position, target) {
+        this.projectionMatrix = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        this.orthogonalMatrix = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        this.viewMatrix = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        this.viewProjMatrix = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        this.invViewProjMatrix = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        this.viewOrhtProjMatrix = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        this.fovy = 45 * 3.1415962 / 180.0;
+        this.aspectRatio = 1;
+        this.near = 0.1;
+        this.far = 1000;
+        this.position = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].create();
+        this.direction = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].create();
+        this.target = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].create();
+        this.up = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 1, 0);
+        this.eye = position,
+            this.center = target,
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].add(this.target, this.position, this.direction);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].lookAt(this.viewMatrix, this.eye, this.center, this.up);
+        console.log("Center: " + this.center);
+        console.log("Eye: " + this.eye);
+        console.log("view mat: " + this.viewMatrix);
+        var scale = 50.0;
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].ortho(this.orthogonalMatrix, -scale, scale, -scale, scale, -scale, scale);
+    }
+    setAspectRatio(aspectRatio) {
+        this.aspectRatio = aspectRatio;
+    }
+    updateProjectionMatrix() {
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].perspective(this.projectionMatrix, this.fovy, this.aspectRatio, this.near, this.far);
+    }
+    update() {
+        //vec3.add(this.target, this.position, this.direction);
+        //mat4.lookAt(this.viewMatrix, this.eye, this.center, this.up);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(this.viewProjMatrix, this.projectionMatrix, this.viewMatrix);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].invert(this.invViewProjMatrix, this.viewProjMatrix);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(this.viewOrhtProjMatrix, this.orthogonalMatrix, this.viewMatrix);
+    }
+}
+;
+/* harmony default export */ __webpack_exports__["a"] = (Light);
+
+
+/***/ }),
+/* 72 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__globals__ = __webpack_require__(1);
 
 class Texture {
@@ -11473,28 +11636,40 @@ class Texture {
 
 
 /***/ }),
-/* 72 */
-/***/ (function(module, exports) {
-
-module.exports = "#version 300 es\nprecision highp float;\n\nuniform mat4 u_Model;\nuniform mat4 u_ModelInvTr;  \n\nuniform mat4 u_View;   \nuniform mat4 u_Proj; \n\nuniform mat4 u_LightModel;\nuniform mat4 u_LightView;   \nuniform mat4 u_LightProj; \nuniform mat4 u_WorldToLightMat;\n\nin vec4 vs_Pos;\nin vec4 vs_Nor;\nin vec4 vs_Col;\nin vec2 vs_UV;\n\nout vec4 fs_Pos;\nout vec4 fs_Nor;            \nout vec4 fs_Col;           \nout vec2 fs_UV;\n\nout vec4 cam_Pos;\nout vec4 lightViewPos;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_UV = vs_UV;\n   // cam_Pos = u_Proj * u_View * u_Model * vs_Pos;\n    cam_Pos = u_View * u_Model * vs_Pos;\n    fs_UV.y = 1.0 - fs_UV.y;\n\n    lightViewPos = u_LightView * u_LightModel * vs_Pos; \n    \n    // fragment info is in view space\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    mat3 view = mat3(u_View);\n    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);\n    fs_Pos = u_View * u_Model * vs_Pos; // position in worldspace\n    \n    \n    gl_Position = u_Proj * u_View * u_Model * vs_Pos;\n\n}\n"
-
-/***/ }),
 /* 73 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Pos;\nin vec4 fs_Nor;\nin vec4 fs_Col;\nin vec2 fs_UV;\n\nuniform vec3 u_LightPos;\nout vec4 fragColor[4]; // The data in the ith index of this array of outputs\n                       // is passed to the ith index of OpenGLRenderer's\n                       // gbTargets array, which is an array of textures.\n                       // This lets us output different types of data,\n                       // such as albedo, normal, and position, as\n                       // separate images from a single render pass.\n\nuniform sampler2D tex_Color;\nuniform mat4 u_mvpLight;\n\n\n// model space vertex positions\nin vec4 lightViewPos;\nin vec4 cam_Pos;\n\nvoid main() {\n    // TODO: pass proper data into gbuffers\n    // Presently, the provided shader passes \"nothing\" to the first\n    // two gbuffers and basic color to the third.\n\n    vec3 col = texture(tex_Color, fs_UV).rgb;\n\n    // if using textures, inverse gamma correct\n    col = pow(col, vec3(2.2));\n\n    // normal and depth value in w\n    fragColor[0] = vec4(fs_Nor.xyz, 1.0);\n    // world pos and 1 for w since mesh overlaps\n    fragColor[1] = vec4(fs_Pos.xyz, 1.0);\n    // albedo\n    fragColor[2] = vec4(col, 1.0);\n\n   // fragColor[3] = vec4(1, 0, 1, 1.0);\n}\n"
+module.exports = "#version 300 es\nprecision highp float;\n\nuniform mat4 u_Model;\nuniform mat4 u_ModelInvTr;  \n\nuniform mat4 u_View;   \nuniform mat4 u_Proj; \n\nuniform mat4 u_LightModel;\nuniform mat4 u_LightView;   \nuniform mat4 u_LightProj; \nuniform mat4 u_WorldToLightMat;\n\nin vec4 vs_Pos;\nin vec4 vs_Nor;\nin vec4 vs_Col;\nin vec2 vs_UV;\n\nout vec4 fs_Pos;\nout vec4 fs_Nor;            \nout vec4 fs_Col;           \nout vec2 fs_UV;\n\nout vec4 cam_Pos;\nout vec4 lightViewPos;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_UV = vs_UV;\n   // cam_Pos = u_Proj * u_View * u_Model * vs_Pos;\n    cam_Pos = u_View * u_Model * vs_Pos;\n    fs_UV.y = 1.0 - fs_UV.y;\n\n    lightViewPos = u_LightView * u_LightModel * vs_Pos; \n    \n    fs_Nor = vs_Nor;\n    fs_Pos = u_View * u_Model * vs_Pos; // position in worldspace\n    \n    \n    gl_Position = u_Proj * u_View * u_Model * vs_Pos;\n\n}\n"
 
 /***/ }),
 /* 74 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\nuniform mat4 u_Model;\nuniform mat4 u_ModelInvTr;  \n\nuniform mat4 u_View;   \nuniform mat4 u_Proj; \n\nin vec4 vs_Pos;\nin vec4 vs_Nor;\nin vec4 vs_Col;\nin vec2 vs_UV;\n\nout vec4 fs_Pos;\nout vec4 fs_Nor;            \nout vec4 fs_Col;           \nout vec2 fs_UV;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_UV = vs_UV;\n    fs_UV.y = 1.0 - fs_UV.y;\n    \n    // fragment info is in view space\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    mat3 view = mat3(u_View);\n    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);\n    fs_Pos = u_View * u_Model * vs_Pos; // position in light-camera view space\n    \n    \n    gl_Position = u_Proj * u_View * u_Model * vs_Pos;\n\n}\n"
+module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Pos;\nin vec4 fs_Nor;\nin vec4 fs_Col;\nin vec2 fs_UV;\n\nuniform mat4 u_Proj;\nuniform mat4 u_ModelInvTr;\nuniform mat4 u_View;   \n\nuniform vec3 u_LightPos;\nout vec4 fragColor[3]; // The data in the ith index of this array of outputs\n                       // is passed to the ith index of OpenGLRenderer's\n                       // gbTargets array, which is an array of textures.\n                       // This lets us output different types of data,\n                       // such as albedo, normal, and position, as\n                       // separate images from a single render pass.\n\nuniform sampler2D tex_Color;\nuniform mat4 u_mvpLight;\n\n\n// model space vertex positions\nin vec4 lightViewPos;\nin vec4 cam_Pos;\n\nvoid main() {\n    // TODO: pass proper data into gbuffers\n    // Presently, the provided shader passes \"nothing\" to the first\n    // two gbuffers and basic color to the third.\n\n    // fragment info is in view space\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    mat3 view = mat3(u_View);\n    \n    vec4 Nor = vec4(view * invTranspose * fs_Nor.xyz, 0);\n\n    vec3 col = texture(tex_Color, fs_UV).rgb;\n\n    // if using textures, inverse gamma correct\n    col = pow(col, vec3(2.2));\n    vec4 projPos = (u_Proj * fs_Pos);\n    float depth = projPos.z / projPos.w;\n    // normal and depth value in w\n    fragColor[0] = vec4(Nor.xyz, depth);\n    // world pos and 1 for w since mesh overlaps\n\n    fragColor[1] = vec4(fs_Pos.xyz, 1.0);\n    // albedo\n    fragColor[2] = vec4(col, 1.0);\n\n   // fragColor[3] = vec4(1.0, 0.0, 1.0, 1.0);\n}\n"
 
 /***/ }),
 /* 75 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Pos;\nin vec4 fs_Nor;\nin vec4 fs_Col;\nin vec2 fs_UV;\n\nout vec4 fragColor[4]; // The data in the ith index of this array of outputs\n                       // is passed to the ith index of OpenGLRenderer's\n                       // gbTargets array, which is an array of textures.\n                       // This lets us output different types of data,\n                       // such as albedo, normal, and position, as\n                       // separate images from a single render pass.\n\nuniform sampler2D tex_Color;\n\nvoid main() {\n    // TODO: pass proper data into gbuffers\n    // Presently, the provided shader passes \"nothing\" to the first\n    // two gbuffers and basic color to the third.\n\n    // vec3 col = texture(tex_Color, fs_UV).rgb;\n\n    // // if using textures, inverse gamma correct\n    // col = pow(col, vec3(2.2));\n    \n    // store fs_Pos in this later\n\n    fragColor[3] = vec4(0., 1., 0., 1.);\n}\n"
+module.exports = "#version 300 es\nprecision highp float;\n\nuniform mat4 u_Model;\nuniform mat4 u_ModelInvTr;  \n\nuniform mat4 u_View;   \nuniform mat4 u_Proj; \nuniform mat4 u_viewProjOrthoMat;\n\nin vec4 vs_Pos;\nin vec4 vs_Nor;\nin vec4 vs_Col;\nin vec2 vs_UV;\n\nout vec4 fs_Pos;\n\nvoid main()\n{\n\n    gl_Position = u_viewProjOrthoMat * u_Model * vs_Pos;\n    fs_Pos = vs_Pos;\n\n}\n"
+
+/***/ }),
+/* 76 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\nuniform mat4 u_Model;\n\nuniform mat4 u_viewProjOrthoMat;\n\nin vec4 fs_Pos;\nin vec4 fs_Nor;\nin vec4 fs_Col;\nin vec2 fs_UV;\n\nlayout(location = 0) out vec4 fragmentdepth;\n//out vec4 fragColor; // The data in the ith index of this array of outputs\n                       // is passed to the ith index of OpenGLRenderer's\n                       // gbTargets array, which is an array of textures.\n                       // This lets us output different types of data,\n                       // such as albedo, normal, and position, as\n                       // separate images from a single render pass.\n\nvoid main() {\n    // TODO: pass proper data into gbuffers\n    // Presently, the provided shader passes \"nothing\" to the first\n    // two gbuffers and basic color to the third.\n\n    // vec3 col = texture(tex_Color, fs_UV).rgb;\n\n    // // if using textures, inverse gamma correct\n    // col = pow(col, vec3(2.2));\n    \n    // store fs_Pos in this later\n\n    //fragColor = vec4(0.0, 1.0, 0.0, 1.0);\n    vec4 Pos_SS = u_viewProjOrthoMat * u_Model * fs_Pos;\n    Pos_SS /= Pos_SS.w;\n    fragmentdepth = vec4(Pos_SS.z);\n}\n"
+
+/***/ }),
+/* 77 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\nuniform mat4 u_Model;\nuniform mat4 u_ModelInvTr;  \n\nuniform mat4 u_View;   \nuniform mat4 u_Proj; \n//uniform float u_mountainHeight; \n\nin vec4 vs_Pos;\nin vec4 vs_Nor;\nin vec4 vs_Col;\nin vec2 vs_UV;\n\nout vec4 fs_Pos;\nout vec4 fs_Nor;            \nout vec4 fs_Col;           \nout vec2 fs_UV;\nout float offset;\nout float landNoise;\n\nconst vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of\n                                        //the geometry in the fragment shader.\n\n\n\n// Return a random direction in a circle\nvec3 random3(vec3 p) {\n    return normalize(2.0f * fract(sin(vec3(dot(p,vec3(127.1,311.7, 217.4)),\n    dot(p,vec3(269.5,183.3, 359.2)), \n    dot(p,vec3(171.1,513.3, 237.9))))*43758.5453) - 1.0f);\n}\n\nvec2 random2( vec2 p ) {\n    return normalize(2.0f * fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453) - 1.0f);\n}\n\n// calculates the Perlin noise value for a point p given a nearby gridpoint\nfloat perlin(vec3 p, vec3 gridPoint) {\n    vec3 gradient = random3(gridPoint);\n    vec3 toP = p - gridPoint;\n    return dot(toP, gradient);\n}\n\n// takes in a position p, calculates the 8 grid points surrounding that position, calculates the 3D Perlin noise\n// value at each of the 8 grid points, and uses trilinear interpolation to find the final Perlin noise value for p\nfloat trilinearInterpolation(vec3 pos) {\n    float tx = smoothstep(0.0, 1.0, fract(pos.x));\n    float ty = smoothstep(0.0, 1.0, fract(pos.y));\n    float tz = smoothstep(0.0, 1.0, fract(pos.z));\n\n    vec3 bottomBackLeft = floor(vec3(pos));\n    vec3 topBackLeft =      vec3(bottomBackLeft.x,        bottomBackLeft.y + 1.0f, bottomBackLeft.z);\n    vec3 topBackRight =     vec3(bottomBackLeft.x + 1.0f, bottomBackLeft.y + 1.0f, bottomBackLeft.z);\n    vec3 bottomBackRight =  vec3(bottomBackLeft.x + 1.0f, bottomBackLeft.y,        bottomBackLeft.z);\n    vec3 bottomFrontLeft =  vec3(bottomBackLeft.x,        bottomBackLeft.y,        bottomBackLeft.z + 1.0f);\n    vec3 topFrontLeft =     vec3(bottomBackLeft.x,        bottomBackLeft.y + 1.0f, bottomBackLeft.z + 1.0f);\n    vec3 topFrontRight =    vec3(bottomBackLeft.x + 1.0f, bottomBackLeft.y + 1.0f, bottomBackLeft.z + 1.0f);\n    vec3 bottomFrontRight = vec3(bottomBackLeft.x + 1.0f, bottomBackLeft.y,        bottomBackLeft.z + 1.0f);\n\n\n    float bbl = perlin(vec3(pos), bottomBackLeft); \n    float tbl = perlin(vec3(pos), topBackLeft);\n    float tbr = perlin(vec3(pos), topBackRight);\n    float bbr = perlin(vec3(pos), bottomBackRight);\n    float bfl = perlin(vec3(pos), bottomFrontLeft);\n    float tfl = perlin(vec3(pos), topFrontLeft); \n    float tfr = perlin(vec3(pos), topFrontRight); \n    float bfr = perlin(vec3(pos), bottomFrontRight);\n\n    //trilinear interpolation of 8 perlin noise values\n    float tfbr = tfr * (tz) + tbr * (1.0f - tz);\n    float tfbl = tbl * (1.0f - tz) + tfl * tz;\n    float bfbl = bbl * (1.0f - tz) + bfl * tz;\n    float bfbr = bfr * (tz) + bbr * (1.0f - tz);\n\n    float top = tfbl * (1.0f - tx) + tfbr * tx;\n    float bottom = bfbl * (1.0f - tx) + bfbr * tx;\n\n    return top * (ty) + bottom * (1.0f - ty);\n}\n\nvoid main()\n{\n     // terrain noise calculation\n    float summedNoise = 0.0;\n    float amplitude = 5.f;//u_mountainHeight;\n    float val;\n    for(int i = 2; i <= 2048; i *= 2) {\n        vec3 pos = vec3(vs_Pos) * .02000f  * float(i);\n        val = trilinearInterpolation(pos);\n        vec3 random = random3(vs_Pos.rgb);\n        if(val > 0.f) {\n           summedNoise += val * amplitude * 10.f;\n        }\n        summedNoise += val * amplitude;\n        amplitude *= .3;\n    }\n\n    val =  summedNoise * .6;\n    vec4 offsetPos = vec4(val * vs_Pos.rgb, 0.0);\n    offset = val * vs_Pos.y;\n\n\n    // water noise calculation\n    vec3 waterPos = vec3(vs_Pos) * 16.f * (2.f)/4.0;\n    landNoise = trilinearInterpolation(waterPos) *1.5f;\n\n    fs_Col = offsetPos;//vs_Col;\n    fs_UV = vs_UV;\n    fs_UV.y = 1.0 - fs_UV.y;\n\n    // fragment info is in view space\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    mat3 view = mat3(u_View);\n    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);\n    //fs_Pos = u_View * u_Model * vs_Pos;\n    \n    vec4 modelposition;\n    modelposition = u_Model * (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));\n\n    \n       \n\n    gl_Position = u_Proj * u_View * modelposition; \n}\n"
+
+/***/ }),
+/* 78 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Pos;\nin vec4 fs_Nor;\nin vec4 fs_Col;\nin vec2 fs_UV;\n\nin float offset;\nin float landNoise;\n\nout vec4 fragColor[3]; // The data in the ith index of this array of outputs\n                       // is passed to the ith index of OpenGLRenderer's\n                       // gbTargets array, which is an array of textures.\n                       // This lets us output different types of data,\n                       // such as albedo, normal, and position, as\n                       // separate images from a single render pass.\n\nuniform sampler2D tex_Color;\n\nconst vec4 lightPos = vec4(0, 7, 0, 1); //The position of our virtual light, which is used to compute the shading of\n                                        //the geometry in the fragment shader.\n\n\n\n\n\n\n\nvoid main() {\n    // TODO: pass proper data into gbuffers\n    // Presently, the provided shader passes \"nothing\" to the first\n    // two gbuffers and basic color to the third.\n\n    vec3 col = texture(tex_Color, fs_UV).rgb; \n\n    vec4 diffuseColor;\n    \n    vec4 tanGrass = vec4(248.0f / 255.0f, 205.0 / 255.0f, 80.0 / 255.0f, 1.0);\n    vec4 grass = vec4(30.f / 255.f, 120.0f / 255.0f, 0.0f, 1.0);\n    vec4 hill = vec4(90.0f / 255.0f, 67.0f / 255.0f, 0.0f, 1.0f);\n\n\n    if(offset > .2) { \n        diffuseColor = hill + vec4(landNoise * .57, 0.0, 0.0, 0.0f); // mountain\n    }\n    else if(offset > -.3f) {\n        diffuseColor = mix(tanGrass + vec4(landNoise*.4, landNoise*.4, landNoise*.4, 0.0f), grass + vec4(0.0, landNoise, 0.0, 0.0f), 1.f -offset); //sand\n        \n    }\n    else { \n        diffuseColor = mix(tanGrass + vec4(landNoise*.4, landNoise*.4, landNoise*.4, 0.0f), grass + vec4(0.0, landNoise, 0.0, 0.0f), -1.f*offset); //sand\n    }\n\n\n   \n\n    // Calculate the diffuse term for Lambert shading\n    float diffuseTerm = dot(normalize(fs_Nor), normalize(lightPos - fs_Pos));\n    // Avoid negative lighting values\n     diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);\n\n    float ambientTerm = 0.3;\n\n    float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier\n                                                            //to simulate ambient lighting. This ensures that faces that are not\n                                                            //lit by our point light are not completely black.\n\n    \n    //lambert shading for terrain\n    diffuseColor = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);\n \n\n\n\n    \n\n    // // if using textures, inverse gamma correct\n     col = pow(col, vec3(2.2));\n\n    fragColor[0] = vec4(0.0);\n    fragColor[1] = vec4(0.0);\n    fragColor[2] = vec4(diffuseColor);\n}\n"
 
 /***/ })
 /******/ ]);
