@@ -18,6 +18,7 @@ out vec4 fs_Nor;
 out vec4 fs_Col;           
 out vec2 fs_UV;
 out float offset;
+out float landNoise;
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
@@ -84,19 +85,26 @@ void main()
 {
      // terrain noise calculation
     float summedNoise = 0.0;
-    float amplitude = 2.5;//u_mountainHeight;
+    float amplitude = 5.f;//u_mountainHeight;
     float val;
-    for(int i = 2; i <= 128; i *= 2) {
-        vec3 pos = vec3(vs_Pos) * 1.5f * float(i);
+    for(int i = 2; i <= 2048; i *= 2) {
+        vec3 pos = vec3(vs_Pos) * .02000f  * float(i);
         val = trilinearInterpolation(pos);
+        if(val > 0.f) {
+           summedNoise += val * amplitude * 6.f;
+        }
         summedNoise += val * amplitude;
-        amplitude *= 0.5;
+        amplitude *= .3;
     }
 
     val =  summedNoise * .6;
-     vec4 offsetPos = vec4(val * vs_Pos.rgb, 0.0);
-    offset = val;
+    vec4 offsetPos = vec4(val * vs_Pos.rgb, 0.0);
+    offset = val * vs_Pos.y;
 
+
+    // water noise calculation
+    vec3 waterPos = vec3(vs_Pos) * 16.f * (2.f)/4.0;
+    landNoise = trilinearInterpolation(waterPos) *1.5f;
 
     fs_Col = offsetPos;//vs_Col;
     fs_UV = vs_UV;
@@ -109,15 +117,10 @@ void main()
     //fs_Pos = u_View * u_Model * vs_Pos;
     
     vec4 modelposition;
-    if(val < 0.0f) {
-        //modelposition = u_Model * (vs_Pos + .2 * offsetPos); // decrease valleys
-        modelposition = u_Model * (vs_Pos + vec4(0.0, .2 * val + vs_Pos.y, 0.0, 0.0));
-    }
-    else {
-        //modelposition = u_Model * (vs_Pos+offsetPos);
-        modelposition = u_Model * (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
+    modelposition = u_Model * (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
+
+    
        
-    }
 
     gl_Position = u_Proj * u_View * modelposition; 
 }
