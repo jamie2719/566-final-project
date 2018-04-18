@@ -1,8 +1,7 @@
-import * as CameraControls from '3d-view-controls';
+
 import {vec3, mat4} from 'gl-matrix';
 
-class Camera {
-  controls: any;
+class Light {
   projectionMatrix: mat4 = mat4.create();
   orthogonalMatrix: mat4 = mat4.create();
   viewMatrix: mat4 = mat4.create();
@@ -16,18 +15,24 @@ class Camera {
   position: vec3 = vec3.create();
   direction: vec3 = vec3.create();
   target: vec3 = vec3.create();
-  up: vec3 = vec3.create();
+  up: vec3 = vec3.fromValues(0, 1, 0);
+  eye: vec3;
+  center: vec3;
+  
 
   constructor(position: vec3, target: vec3) {
-    this.controls = CameraControls(document.getElementById('canvas'), {
-      eye: position,
-      center: target,
-    });
-    this.controls.mode = 'turntable';
+    
+    this.eye = position,
+    this.center =  target,
     vec3.add(this.target, this.position, this.direction);
-    mat4.lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
-    var scale = 20.0;
-    mat4.ortho(this.orthogonalMatrix, -scale, scale, -scale, scale, this.near, this.far);
+    mat4.lookAt(this.viewMatrix, this.eye, this.center, this.up);
+
+console.log("Center: " + this.center);
+console.log("Eye: " + this.eye);
+console.log("view mat: " + this.viewMatrix);
+
+    var scale = 50.0;
+    mat4.ortho(this.orthogonalMatrix, -scale, scale, -scale, scale, -scale, scale);
   }
 
   setAspectRatio(aspectRatio: number) {
@@ -41,10 +46,9 @@ class Camera {
   }
 
   update() {
-    this.controls.tick();
 
-    vec3.add(this.target, this.position, this.direction);
-    mat4.lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
+    //vec3.add(this.target, this.position, this.direction);
+    //mat4.lookAt(this.viewMatrix, this.eye, this.center, this.up);
 
     
     mat4.multiply(this.viewProjMatrix, this.projectionMatrix, this.viewMatrix);
@@ -54,4 +58,4 @@ class Camera {
   }
 };
 
-export default Camera;
+export default Light;

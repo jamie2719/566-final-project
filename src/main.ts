@@ -5,6 +5,7 @@ import Square from './geometry/Square';
 import Mesh from './geometry/Mesh';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
+import Light from './LIght';
 import {setGL} from './globals';
 import {readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
@@ -87,7 +88,9 @@ function main() {
   loadScene();
 
   const camera = new Camera(vec3.fromValues(0, 9, 25), vec3.fromValues(0, 9, 0));
-  const light = new Camera(vec3.fromValues(4, 4, 4), camera.target);
+  const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
+  light.update();
+  light.updateProjectionMatrix();
 
   const renderer = new OpenGLRenderer(canvas, vec4.fromValues(light.position[0], light.position[1], light.position[2], 1));
   renderer.setClearColor(0, 0, 0, 1);
@@ -104,10 +107,7 @@ function main() {
       ]);
 
   standardDeferred.setupTexUnits(["tex_Color"]);
-  shadowDeferred.setupTexUnits(["tex_Color"]);
-
-  // TODO see if still necessary  
-  ////////////////////////////////
+  //shadowDeferred.setupTexUnits(["tex_Color"]);
   
   // camera view to light view matrix: light view * inverse(camera view)
   let shadowMat = mat4.create(); 
@@ -118,8 +118,11 @@ function main() {
 
   renderer.setLightMatrices(shadowMat, light.projectionMatrix, light.viewMatrix);
 
+  standardDeferred.setProjMatrix(camera.projectionMatrix);
+
   function tick() {
     camera.update();
+
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     timer.updateTime();
@@ -128,7 +131,7 @@ function main() {
     renderer.setDimensions(vec2.fromValues(window.innerWidth, window.innerHeight));
 
     standardDeferred.bindTexToUnit("tex_Color", tex0, 0);
-    shadowDeferred.bindTexToUnit("tex_Color", tex0, 0); 
+    //shadowDeferred.bindTexToUnit("tex_Color", tex0, 0); 
 
     renderer.clear();
     renderer.clearGB();
@@ -137,7 +140,7 @@ function main() {
     // forward render mesh info into gbuffers
     renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [mesh0, plane]);
     // render from gbuffers into 32-bit color buffer
-    renderer.renderFromGBuffer(camera);
+    renderer.renderFromGBuffer(camera, light);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
     renderer.renderPostProcessHDR();
     // apply 8-bit post and draw

@@ -35,10 +35,7 @@ void main()
 
     lightViewPos = u_LightView * u_LightModel * vs_Pos; 
     
-    // fragment info is in view space
-    mat3 invTranspose = mat3(u_ModelInvTr);
-    mat3 view = mat3(u_View);
-    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);
+    fs_Nor = vs_Nor;
     fs_Pos = u_View * u_Model * vs_Pos; // position in worldspace
     
     

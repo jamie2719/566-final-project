@@ -41,8 +41,14 @@ class ShaderProgram {
   unifLightModel: WebGLUniformLocation;
   unifLightView: WebGLUniformLocation;
   unifLightProj: WebGLUniformLocation;
+  unifLightOrtho: WebGLUniformLocation;
 
   unifShadowMat: WebGLUniformLocation;
+
+  unifViewProjMat: WebGLUniformLocation;
+  unifViewProjOrthoMat: WebGLUniformLocation;
+  unifInvViewProjMat: WebGLUniformLocation;
+
 
   unifTexUnits: Map<string, WebGLUniformLocation>;
 
@@ -74,10 +80,15 @@ class ShaderProgram {
     this.unifLightModel = gl.getUniformLocation(this.prog, "u_LightModel");
     this.unifLightView = gl.getUniformLocation(this.prog, "u_LightView");
     this.unifLightProj = gl.getUniformLocation(this.prog, "u_LightProj");
+    this.unifLightOrtho = gl.getUniformLocation(this.prog, "u_LightOrtho");
 
     this.unifViewToLightMat = gl.getUniformLocation(this.prog, "u_WorldToLightMat");
 
     this.unifShadowMat = gl.getUniformLocation(this.prog, "u_ShadowMat");
+
+    this.unifViewProjMat = gl.getUniformLocation(this.prog, "u_viewProjMat");
+    this.unifViewProjOrthoMat = gl.getUniformLocation(this.prog, "u_viewProjOrthoMat");
+    this.unifInvViewProjMat = gl.getUniformLocation(this.prog, "u_invViewProjMat");
 
     this.unifTexUnits = new Map<string, WebGLUniformLocation>();
   }
@@ -148,6 +159,13 @@ class ShaderProgram {
     }
   }
 
+  setInvViewProjMatrix(vp: mat4) {
+    this.use();
+    if (this.unifInvViewProjMat !== -1) {
+      gl.uniformMatrix4fv(this.unifInvViewProjMat, false, vp);
+    }
+  }
+
   setViewMatrix(vp: mat4) {
     this.use();
     if (this.unifView !== -1) {
@@ -176,10 +194,31 @@ class ShaderProgram {
     }
   }
 
+  setLightOrthoMatrix(vp: mat4) {
+    this.use();
+    if (this.unifLightOrtho !== -1) {
+      gl.uniformMatrix4fv(this.unifLightOrtho, false, vp);
+    }
+  }
+
   setShadowMat(m: mat4) {
     this.use();
     if (this.unifShadowMat !== -1) {
       gl.uniformMatrix4fv(this.unifShadowMat, false, m);
+    }
+  }
+
+  setViewProjMat(model: mat4) {
+    this.use();
+    if (this.unifViewProjMat !== -1) {
+      gl.uniformMatrix4fv(this.unifViewProjMat, false, model);
+    }
+  }
+
+  setViewProjOrthoMat(model: mat4) {
+    this.use();
+    if (this.unifViewProjOrthoMat !== -1) {
+      gl.uniformMatrix4fv(this.unifViewProjOrthoMat, false, model);
     }
   }
 

@@ -1,6 +1,7 @@
 import {mat4, vec4, vec3, vec2} from 'gl-matrix';
 import Drawable from './Drawable';
 import Camera from '../../Camera';
+import Light from '../../Light';
 import {gl} from '../../globals';
 import ShaderProgram, {Shader} from './ShaderProgram';
 import PostProcess from './PostProcess'
@@ -17,6 +18,7 @@ class OpenGLRenderer {
                              // this if you want more 32-bit storage.
   shadowBuffer: WebGLFramebuffer;
   shadowTexture: WebGLTexture;
+  shadowDepthTexture: WebGLTexture;
 
   depthTexture: WebGLTexture; // You don't need to interact with this, it's just
                               // so the OpenGL pipeline can do depth sorting
@@ -49,7 +51,7 @@ class OpenGLRenderer {
     new Shader(gl.FRAGMENT_SHADER, require('../../shaders/brushStrokes.glsl'))
   );
 
-  lightPos: vec4 = vec4.fromValues(4, 2, 6, 1);
+  lightPos: vec4 = vec4.fromValues(4, 4, 4, 1);
 
 
   add8BitPass(pass: PostProcess) {
@@ -66,7 +68,7 @@ class OpenGLRenderer {
     this.lightPos = lightPos;
 
     this.currentTime = 0.0;
-    this.gbTargets = [undefined, undefined, undefined, undefined];
+    this.gbTargets = [undefined, undefined, undefined];
     this.post8Buffers = [undefined, undefined];
     this.post8Targets = [undefined, undefined];
     this.post8Passes = [];
@@ -76,7 +78,7 @@ class OpenGLRenderer {
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
-    this.add8BitPass(this.brushStrokes);
+//    this.add8BitPass(this.brushStrokes);
 
     this.deferredShader.setLightPos(this.lightPos);
     
@@ -109,11 +111,11 @@ class OpenGLRenderer {
     console.log(width, height);
     this.canvas.width = width;
     this.canvas.height = height;
-/*
+
     // SHADOW MAP CREATION START
     this.shadowBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
     this.shadowTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
     
@@ -122,8 +124,20 @@ class OpenGLRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.shadowTexture, 0);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 1024,1024, 0, gl.RGBA , gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.shadowTexture, 0);
+
+    this.shadowDepthTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.shadowDepthTexture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.shadowDepthTexture, 0);
+
+
 
     var FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
@@ -133,12 +147,12 @@ class OpenGLRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     /// END SHADOW MAP BUFFER SET UP
 
-*/
+
     // --- GBUFFER CREATION START ---
     // refresh the gbuffers
     this.gBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
 
     for (let i = 0; i < this.gbTargets.length; i ++) {
       this.gbTargets[i] = gl.createTexture();
@@ -244,7 +258,8 @@ class OpenGLRenderer {
   }
 
 
-  renderToGBuffer(camera: Camera, light: Camera, gbProg: ShaderProgram, shadowProg: ShaderProgram, drawables: Array<Drawable>) {
+  renderToGBuffer(camera: Camera, light: Light, gbProg: ShaderProgram, shadowProg: ShaderProgram, drawables: Array<Drawable>) {
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.enable(gl.DEPTH_TEST);
@@ -269,25 +284,30 @@ class OpenGLRenderer {
       gbProg.draw(drawable);
     }
 
+    //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     // do same thing but from the light camera
-/*
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    
+    gl.viewport(0, 0, 1024.0, 1024.0);
     gl.enable(gl.DEPTH_TEST);
-*/
+
+    this.clear();
+
+
     let modelL = mat4.create();
-    let viewProjL = mat4.create();
+    //let viewProjL = mat4.create();
     let viewL = light.viewMatrix;
-    let projL = light.projectionMatrix;
+    let projL = light.orthogonalMatrix;
     let colorL = vec4.fromValues(0.5, 0.5, 0.5, 1);
 
     mat4.identity(modelL);
-    mat4.multiply(viewProjL, light.projectionMatrix, light.viewMatrix);
+    //mat4.multiply(viewProjL, light.orthogonalMatrix, light.viewMatrix);
     shadowProg.setModelMatrix(modelL);
-    shadowProg.setViewProjMatrix(viewProjL);
-    shadowProg.setGeometryColor(color);
-    shadowProg.setViewMatrix(viewL);
-    shadowProg.setProjMatrix(projL);
+    //shadowProg.setViewProjMatrix(light.viewOrhtProjMatrix);
+    //shadowProg.setGeometryColor(color);
+    //shadowProg.setViewMatrix(viewL);
+    shadowProg.setViewProjOrthoMat(light.viewOrhtProjMatrix);
 
     shadowProg.setTime(this.currentTime);
 
@@ -299,7 +319,9 @@ class OpenGLRenderer {
 
   }
 
-  renderFromGBuffer(camera: Camera) {
+  renderFromGBuffer(camera: Camera, light: Light) {
+        // set var for deferred render
+    
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[0]);
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.disable(gl.DEPTH_TEST);
@@ -311,10 +333,18 @@ class OpenGLRenderer {
     this.deferredShader.setViewMatrix(view);
     this.deferredShader.setProjMatrix(proj);
 
+    this.deferredShader.setInvViewProjMatrix(camera.invViewProjMatrix);
+    this.deferredShader.setViewProjOrthoMat(light.viewOrhtProjMatrix);
+    this.deferredShader.setLightOrthoMatrix(light.orthogonalMatrix);
+    this.deferredShader.setLightViewMatrix(light.viewMatrix);
+
+
     for (let i = 0; i < this.gbTargets.length; i ++) {
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[i]);
     }
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
 
     this.deferredShader.draw();
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -407,6 +437,7 @@ setDimensions(dim: vec2)
   for(let i = 0; i < this.post8Passes.length; i++) {
     this.post8Passes[i].setDimensions(dim);
   }
+  this.deferredShader.setDimensions(dim);
  }
 
  setLightMatrices(shadowMat: mat4, proj: mat4, view: mat4){
