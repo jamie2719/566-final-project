@@ -132,8 +132,8 @@ function loadScene() {
   alpaca.create();
 
 
-  alpacaTex = new Texture('resources/textures/alpaca.jpg')
-  wahooTex = new Texture('resources/textures/wahoo.bmp')
+  alpacaTex = new Texture('../resources/textures/alpaca.jpg')
+  wahooTex = new Texture('../resources/textures/wahoo.bmp')
    //tex1 = new Texture('../resources/textures/grass.bmp')
 
 }
