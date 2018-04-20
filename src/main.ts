@@ -54,9 +54,9 @@ var timer = {
 
 function loadOBJText() {
 
-  alpacaS = readTextFile('resources/obj/alpaca.obj')
-  wahooS = readTextFile('resources/obj/wahoo.obj')
-  groundS = readTextFile('resources/obj/ground.obj')
+  alpacaS = readTextFile('../resources/obj/alpaca.obj')
+  wahooS = readTextFile('../resources/obj/wahoo.obj')
+  groundS = readTextFile('../resources/obj/ground.obj')
 }
 
 function VBOtoVec4(arr: Float32Array) {
