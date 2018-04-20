@@ -31,12 +31,19 @@ uniform vec4 u_CamPos;
 
 uniform vec4 u_LightPos;
 
+// const vec3 sky[5] = vec3[](
+//         vec3(122, 155, 165) / 255.0,
+// vec3(220, 153, 162) / 255.0,
+// vec3(254, 196, 159) / 255.0,
+// vec3(217, 235, 215) / 255.0,
+// vec3(162, 230, 249) / 255.0);
+
 const vec3 sky[5] = vec3[](
-        vec3(122, 155, 165) / 255.0,
-vec3(220, 153, 162) / 255.0,
+vec3(182, 112, 50) / 255.0,
+vec3(214, 158, 81) / 255.0,
 vec3(254, 196, 159) / 255.0,
-vec3(217, 235, 215) / 255.0,
-vec3(162, 230, 249) / 255.0);
+vec3(238, 202, 102) / 255.0,
+vec3(255, 242, 198) / 255.0);
 
 vec4 skyShader();
 
@@ -80,6 +87,8 @@ bool isVisible(float depth) {
 void main() { 
 	// read from GBuffers
 	vec4 fs_Nor = texture(u_gb0, fs_UV);
+
+    float type = texture(u_gb2, fs_UV).w;
 	
 	vec4 meshOverlap = texture(u_gb1, fs_UV);
 	vec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
@@ -97,15 +106,17 @@ void main() {
 		out_Col = skyShader();
 		return;
 	}
-	if(!isVisible(fs_Nor.w)) {
+	if(!isVisible(fs_Nor.w) && type != 1.0 && type != 3.0) {
 		out_Col = diffuseColor * 0.5;
+        // distance fog
+        vec4 fogColor = vec4(sky[3].xyz, 1.0);
+        float dist = fs_Nor.w;
+        //out_Col = (out_Col * (1.0 - dist)) + (dist * fogColor);
 	} else {
 		out_Col = vec4(diffuseColor.xyz, 1.0);
 	}
 
-	float ssample =texture(shadowMapTex, fs_UV).r;
-	//out_Col.rgb = clamp(vec3(ssample),0.0, 1.0);
-	return;
+    
 }
 
 vec2 sphereToUV(vec3 p)
@@ -255,6 +266,14 @@ vec4 skyShader() {
 
 	distortedSkyHue = uvToSky(uv + slope);
     cloudColor = sky[3];
+
+	float sunSize = 20.0;
+	vec3 sunCol = vec3(1.0);
+	vec3 sunDir = normalize(u_LightPos.xyz);
+	float angle = acos(dot(rayDir, sunDir)) * 360.0 / PI;
+	if(angle < sunSize) {
+		return vec4(mix(sunCol, cloudColor, heightField * 0.75 * angle / 30.0), 1.0);
+	}
 
 	vec3 outColor = mix(distortedSkyHue, cloudColor, heightField * 0.75);
 	

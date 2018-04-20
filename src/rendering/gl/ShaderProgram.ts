@@ -38,6 +38,8 @@ class ShaderProgram {
   unifDim: WebGLUniformLocation;
   unifLight: WebGLUniformLocation;
   unifViewToLightMat: WebGLUniformLocation;
+  unifCamPos: WebGLUniformLocation;
+
 
   unifLightModel: WebGLUniformLocation;
   unifLightView: WebGLUniformLocation;
@@ -78,6 +80,7 @@ class ShaderProgram {
     this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
     this.unifDim = gl.getUniformLocation(this.prog, "u_Dimensions");
     this.unifLight = gl.getUniformLocation(this.prog, "u_LightPos");
+    this.unifCamPos = gl.getUniformLocation(this.prog, "u_CamPos");
 
     this.unifLightModel = gl.getUniformLocation(this.prog, "u_LightModel");
     this.unifLightView = gl.getUniformLocation(this.prog, "u_LightView");
@@ -228,6 +231,13 @@ class ShaderProgram {
     this.use();
     if (this.unifColor !== -1) {
       gl.uniform4fv(this.unifColor, color);
+    }
+  }
+
+  setCamPos(c: vec4) {
+    this.use();
+    if (this.unifCamPos !== -1) {
+      gl.uniform4fv(this.unifCamPos, c);
     }
   }
 

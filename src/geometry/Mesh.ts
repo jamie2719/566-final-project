@@ -46,11 +46,15 @@ class Mesh extends Drawable {
 
     // white vert color for now
     this.colors = new Float32Array(posTemp.length);
-    this.types = new Float32Array(posTemp.length);
+    this.types = new Float32Array(posTemp.length / 4.0);
     for (var i = 0; i < posTemp.length; ++i){
-      this.types[i] = this.type;
       this.colors[i] = 1.0;
     }
+
+    for (var i = 0; i < posTemp.length / 4.0; ++i){
+      this.types[i] = this.type;
+    }
+
 
     this.indices = new Uint32Array(idxTemp);
     this.normals = new Float32Array(norTemp);

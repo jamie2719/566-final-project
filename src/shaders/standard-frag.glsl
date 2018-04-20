@@ -20,7 +20,9 @@ out vec4 fragColor[3]; // The data in the ith index of this array of outputs
                        // such as albedo, normal, and position, as
                        // separate images from a single render pass.
 
-uniform sampler2D tex_Color;
+uniform sampler2D tex_Color0; // alpaca
+uniform sampler2D tex_Color1; // frame
+uniform sampler2D tex_Color2; // wall
 
 in float offset;
 in float landNoise;
@@ -41,8 +43,12 @@ void main() {
     vec3 col;
     if(fs_Type == 0.0) {
         col = terrainCol();
-    } else {
-        col = texture(tex_Color, fs_UV).rgb;
+    } else if(fs_Type == 1.0){
+        col = texture(tex_Color0, fs_UV).rgb;
+    } else if (fs_Type == 2.0) {
+        col = texture(tex_Color1, fs_UV).rgb;
+    } else if (fs_Type == 3.0) {
+        col = texture(tex_Color2, fs_UV).rgb;
     }
 
     // if using textures, inverse gamma correct
@@ -59,18 +65,23 @@ void main() {
     fragColor[1] = vec4(1.0);
 
     // albedo
-    fragColor[2] = vec4(col, 1.0);
+    fragColor[2] = vec4(col, fs_Type);
 
 }
 
 vec3 terrainCol() {
     vec3 diffuseColor;
     
-    vec3 tanGrass = vec3(248.0f / 255.0f, 205.0 / 255.0f, 80.0 / 255.0f);
-    vec3 grass = vec3(30.f / 255.f, 120.0f / 255.0f, 0.0f);
-    vec3 hill = vec3(90.0f / 255.0f, 67.0f / 255.0f, 0.0f);
+    // vec3 tanGrass = vec3(248.0f / 255.0f, 205.0 / 255.0f, 80.0 / 255.0f);
+    // vec3 grass = vec3(30.f / 255.f, 120.0f / 255.0f, 0.0f);
+    // vec3 hill = vec3(90.0f / 255.0f, 67.0f / 255.0f, 0.0f);
+
+     vec3 tanGrass = vec3(204.0f / 255.0f, 133.0 / 255.0f, 60.0 / 255.0f);
+     vec3 grass = vec3(210.f / 255.f, 143.0f / 255.0f, 63.0f / 255.0);
+     vec3 hill = vec3(167.0f / 255.0f, 111.0f / 255.0f, 43.0f / 255.0);
 
 
+/*
     if(offset > .2) { 
         diffuseColor = hill + vec3(landNoise * .57, 0.0, 0.0); // mountain
     }
@@ -81,5 +92,9 @@ vec3 terrainCol() {
     else { 
         diffuseColor = mix(tanGrass + vec3(landNoise*.4, landNoise*.4, landNoise*.4), grass + vec3(0.0, landNoise, 0.0), -1.f*offset); //sand
     }
+
+    */
+    diffuseColor = hill + vec3(landNoise * .57, 0.0, 0.0); // mountain
+    
     return diffuseColor;
 }

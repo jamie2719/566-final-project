@@ -52,6 +52,10 @@ class OpenGLRenderer {
     new Shader(gl.FRAGMENT_SHADER, require('../../shaders/brushStrokes.glsl'))
   );
 
+  occlusionPass :  PostProcess = new PostProcess(
+    new Shader(gl.FRAGMENT_SHADER, require('../../shaders/occlusionPrePass.glsl'))
+  );
+
   lightPos: vec4 = vec4.fromValues(4, 4, 4, 1);
 
 
@@ -80,8 +84,10 @@ class OpenGLRenderer {
 
     // TODO: these are placeholder post shaders, replace them with something good
     this.add8BitPass(this.brushStrokes);
+    this.add8BitPass(this.occlusionPass);
 
     this.deferredShader.setLightPos(this.lightPos);
+    this.occlusionPass.setLightPos(this.lightPos);
     
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -101,6 +107,10 @@ class OpenGLRenderer {
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
     gl.uniform1i(shadowMapTex, 3);
+
+    var typeTex = gl.getUniformLocation(this.brushStrokes.prog, "u_typeTex");
+    this.brushStrokes.use();
+    gl.uniform1i(typeTex, 1);
 
   }
 
@@ -338,6 +348,7 @@ class OpenGLRenderer {
     this.deferredShader.setViewProjOrthoMat(light.viewOrhtProjMatrix);
     this.deferredShader.setLightOrthoMatrix(light.orthogonalMatrix);
     this.deferredShader.setLightViewMatrix(light.viewMatrix);
+    this.deferredShader.setCamPos(vec4.fromValues(camera.position[0], camera.position[1], camera.position[2], 1));
 
 
     for (let i = 0; i < this.gbTargets.length; i ++) {
@@ -407,7 +418,7 @@ class OpenGLRenderer {
 
 
   // TODO: pass any info you need as args
-  renderPostProcessLDR() {
+  renderPostProcessLDR(camera: Camera) {
     // TODO: replace this with your post 8-bit pipeline
     // the loop shows how to swap between frame buffers and textures given a list of processes,
     // but specific shaders (e.g. motion blur) need specific info as textures
@@ -417,6 +428,10 @@ class OpenGLRenderer {
       if (i < this.post8Passes.length - 1) gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[(i + 1) % 2]);
       else gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+      this.post8Passes[i].setInvViewProjMatrix(camera.invViewProjMatrix);
+      this.post8Passes[i].setViewMatrix(camera.viewMatrix);
+      this.post8Passes[i].setCamPos(vec4.fromValues(camera.position[0], camera.position[1], camera.position[2], 1));
+
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.disable(gl.DEPTH_TEST);
       gl.enable(gl.BLEND);
@@ -424,6 +439,9 @@ class OpenGLRenderer {
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[(i) % 2]);
+
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[2]); // pass in albedo/type channel of gbTargets
 
       this.post8Passes[i].draw();
 

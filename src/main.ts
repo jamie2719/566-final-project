@@ -27,6 +27,12 @@ import Texture from './rendering/gl/Texture';
 let alpacaS: string;
 let alpaca: Mesh;
 
+let frameS: string;
+let frame: Mesh;
+
+let wallS: string;
+let wall: Mesh;
+
 let wahooS: string;
 let wahoo: Mesh;
 
@@ -36,7 +42,8 @@ let ground: Mesh;
 // let ground: Cube;
 
 let alpacaTex: Texture;
-let wahooTex: Texture;
+let frameTex: Texture;
+let wallTex: Texture;
 
 
 var timer = {
@@ -53,10 +60,10 @@ var timer = {
 
 
 function loadOBJText() {
-
+  frameS = readTextFile('../resources/obj/frame.obj')
   alpacaS = readTextFile('../resources/obj/alpaca.obj')
-  wahooS = readTextFile('../resources/obj/wahoo.obj')
   groundS = readTextFile('../resources/obj/ground.obj')
+  wallS = readTextFile('../resources/obj/wall.obj')
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -99,42 +106,27 @@ function Vec4toVBO(vectors: Array<vec4>) {
 function loadScene() {
   ground && ground.destroy();
   alpaca && alpaca.destroy();
-  wahoo && wahoo.destroy();
+  frame && frame.destroy();
+  wall && wall.destroy();
 
 
 
   //setup ground plane
   ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
-  // var posVectors = VBOtoVec4(ground.positions);
-  // var norVectors = VBOtoVec4(ground.normals);
-  // var groundRot = mat4.create();
-  // var invRot = mat4.create();
-  // groundRot = mat4.rotateX(groundRot, groundRot, Math.PI * 90 / 180);
-  // invRot = mat4.transpose(invRot, groundRot);
-  // var groundScale = mat4.create();
-  // groundScale = mat4.scale(groundScale, groundScale, vec3.fromValues(10, 10, 10));
-  // transformVectors(posVectors, groundRot);
-  // transformVectors(norVectors,invRot);
-  // transformVectors(posVectors, groundScale);
-  // // var translation = vec4.fromValues(0, 1, 0, 0);
-  // // for(var i = 0; i < posVectors.length; i++) {
-  // //   var newVector: vec4 = vec4.create();
-  // //   newVector = vec4.add(newVector, posVectors[i], translation);
-
-  // //   posVectors[i] = newVector;
-  // // }
-  // ground.positions = Vec4toVBO(posVectors);
-  // ground.normals = Vec4toVBO(norVectors);
-  
   ground.create();
 
   alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), 1);
   alpaca.create();
 
+  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), 2);
+  frame.create();
 
-  alpacaTex = new Texture('../resources/textures/alpaca.jpg')
-  wahooTex = new Texture('../resources/textures/wahoo.bmp')
-   //tex1 = new Texture('../resources/textures/grass.bmp')
+  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), 3);
+  wall.create();
+
+  alpacaTex = new Texture('../resources/textures/alpaca.jpg');
+  frameTex = new Texture('../resources/textures/wood.jpg');
+  wallTex = new Texture('../resources/textures/paint.jpg');
 
 }
 
@@ -164,7 +156,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 40, 110), vec3.fromValues(0, 9, 0));
+  const camera = new Camera(vec3.fromValues(0, 50, 300), vec3.fromValues(0, 50, 0));
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
@@ -185,14 +177,11 @@ function main() {
       new Shader(gl.FRAGMENT_SHADER, require('./shaders/shadow-frag.glsl')),
       ]);
 
-  // const standardTerrain = new ShaderProgram([
-  //   new Shader(gl.VERTEX_SHADER, require('./shaders/Terrain/terrain-vert.glsl')),
-  //   new Shader(gl.FRAGMENT_SHADER, require('./shaders/Terrain/terrain-frag.glsl')),
-  //   ]);
 
-  standardDeferred.setupTexUnits(["tex_Color"]);
+  standardDeferred.setupTexUnits(["tex_Color0"]);
+  standardDeferred.setupTexUnits(["tex_Color1"]);
+  standardDeferred.setupTexUnits(["tex_Color2"]);
 
-  // camera view to light view matrix: light view * inverse(camera view)
   let shadowMat = mat4.create(); 
   let invViewProj = mat4.create();
   mat4.copy(invViewProj, camera.viewMatrix);
@@ -200,10 +189,7 @@ function main() {
   mat4.multiply(shadowMat, light.viewMatrix, invViewProj);
 
   renderer.setLightMatrices(shadowMat, light.projectionMatrix, light.viewMatrix);
-
   standardDeferred.setProjMatrix(camera.projectionMatrix);
-
-  //standardTerrain.setupTexUnits(["tex_Color1"]);
 
   function tick() {
     camera.update();
@@ -215,7 +201,9 @@ function main() {
 
     renderer.setDimensions(vec2.fromValues(window.innerWidth, window.innerHeight));
 
-    standardDeferred.bindTexToUnit("tex_Color", alpacaTex, 0);
+    standardDeferred.bindTexToUnit("tex_Color0", alpacaTex, 0);
+    standardDeferred.bindTexToUnit("tex_Color1", frameTex, 1);
+    standardDeferred.bindTexToUnit("tex_Color2", wallTex, 2);
 
 
     renderer.clear();
@@ -224,14 +212,14 @@ function main() {
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
 
-    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground]);
+    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, wall]);
     //renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
     renderer.renderPostProcessHDR();
     // apply 8-bit post and draw
-    renderer.renderPostProcessLDR();
+    renderer.renderPostProcessLDR(camera);
 
     stats.end();
     requestAnimationFrame(tick);

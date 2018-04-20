@@ -19,18 +19,7 @@ layout(location = 0) out vec4 fragmentdepth;
                        // separate images from a single render pass.
 
 void main() {
-    // TODO: pass proper data into gbuffers
-    // Presently, the provided shader passes "nothing" to the first
-    // two gbuffers and basic color to the third.
 
-    // vec3 col = texture(tex_Color, fs_UV).rgb;
-
-    // // if using textures, inverse gamma correct
-    // col = pow(col, vec3(2.2));
-    
-    // store fs_Pos in this later
-
-    //fragColor = vec4(0.0, 1.0, 0.0, 1.0);
     vec4 Pos_SS = u_viewProjOrthoMat * u_Model * fs_Pos;
     Pos_SS /= Pos_SS.w;
     fragmentdepth = vec4(Pos_SS.z);
