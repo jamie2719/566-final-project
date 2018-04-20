@@ -54,9 +54,9 @@ var timer = {
 
 function loadOBJText() {
 
-  alpacaS = readTextFile('./566-final-project/resources/obj/alpaca.obj')
-  wahooS = readTextFile('./566-final-project/resources/obj/wahoo.obj')
-  groundS = readTextFile('./566-final-project/resources/obj/ground.obj')
+  alpacaS = readTextFile('./resources/obj/alpaca.obj')
+  wahooS = readTextFile('./resources/obj/wahoo.obj')
+  groundS = readTextFile('./resources/obj/ground.obj')
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -133,9 +133,9 @@ function loadScene() {
 
 
 
-  alpacaTex = new Texture('./566-final-project/resources/textures/alpaca.jpg')
-  wahooTex = new Texture('./566-final-project/resources/textures/wahoo.bmp')
-   //tex1 = new Texture('../resources/textures/grass.bmp')
+  alpacaTex = new Texture('./resources/textures/alpaca.jpg')
+  wahooTex = new Texture('./resources/textures/wahoo.bmp')
+   //tex1 = new Texture('./resources/textures/grass.bmp')
 
 }
 
