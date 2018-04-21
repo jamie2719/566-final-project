@@ -9,6 +9,7 @@ in vec4 fs_Pos;
 in vec4 fs_Nor;
 in vec4 fs_Col;
 in vec2 fs_UV;
+in float fs_Type;
 
 layout(location = 0) out vec4 fragmentdepth;
 //out vec4 fragColor; // The data in the ith index of this array of outputs

@@ -60,10 +60,10 @@ bool isVisible(float depth) {
 	xy = xy * 2.0 - vec2(1.0);
 	
 	vec4 camProjPos = vec4(xy.xy, depth, 1.0);
-	vec4 camWorldPos = u_invViewProjMat * camProjPos;
+	vec4 camWorldPos = u_invViewProjMat * camProjPos; 
 	camWorldPos /= camWorldPos.w;
 
-	vec4 lightProjPos = u_viewProjOrthoMat * camWorldPos;
+	vec4 lightProjPos = u_viewProjOrthoMat * camWorldPos; // light screen space
 
 	float currDepth = lightProjPos.z;
 
@@ -106,16 +106,33 @@ void main() {
 		out_Col = skyShader();
 		return;
 	}
-	if(!isVisible(fs_Nor.w) && type != 1.0 && type != 3.0) {
-		out_Col = diffuseColor * 0.5;
-        // distance fog
-        vec4 fogColor = vec4(sky[3].xyz, 1.0);
-        float dist = fs_Nor.w;
-        //out_Col = (out_Col * (1.0 - dist)) + (dist * fogColor);
+	if(!isVisible(fs_Nor.w) && type != 1.0 && type != 2.0) {
+		out_Col = diffuseColor * 0.5;  
 	} else {
 		out_Col = vec4(diffuseColor.xyz, 1.0);
 	}
+    // distance fog
+    vec4 fogColor = vec4(sky[3].xyz, 1.0);
 
+    float depth = fs_Nor.w;
+	vec2 xy = fs_UV;
+	xy = xy * 2.0 - vec2(1.0);
+	
+	vec4 camProjPos = vec4(xy.xy, depth, 1.0);
+	vec4 worldPos = u_invViewProjMat * camProjPos; 
+	worldPos /= worldPos.w;
+
+    float minFogDist = 300.0;
+    float maxFogDist = 800.0;
+    //float camDist = distance(u_CamPos, worldPos);
+    float camDist = length(u_CamPos.xyz - worldPos.xyz);
+    if(camDist > minFogDist) {
+        out_Col = mix(out_Col, fogColor, (camDist - minFogDist) / (maxFogDist - minFogDist));
+    }
+    if (camDist > maxFogDist) {
+        out_Col = fogColor;
+    }
+    //out_Col = vec4();
     
 }
 
@@ -213,26 +230,27 @@ float fbm(const in vec2 uv)
 
 vec3 uvToSky(vec2 uv)
 {
+    float lB = .4; // lower bound of horizon
     // Below horizon
-    if(uv.y < 0.5)
+    if(uv.y < lB)
     {
         return sky[0];
     }
-    else if(uv.y < 0.55) // 0.5 to 0.55
+    else if(uv.y < (lB + 0.05)) // 0.5 to 0.55
     {
-        return mix(sky[0], sky[1], (uv.y - 0.5) / 0.05);
+        return mix(sky[0], sky[1], (uv.y - (lB)) / 0.05);
     }
-    else if(uv.y < 0.6)// 0.55 to 0.6
+    else if(uv.y < (lB + 0.1))// 0.55 to 0.6
     {
-        return mix(sky[1], sky[2], (uv.y - 0.55) / 0.05);
+        return mix(sky[1], sky[2], (uv.y - (lB + 0.05)) / 0.05);
     }
-    else if(uv.y < 0.65) // 0.6 to 0.65
+    else if(uv.y < (lB + 0.15)) // 0.6 to 0.65
     {
-        return mix(sky[2], sky[3], (uv.y - 0.6) / 0.05);
+        return mix(sky[2], sky[3], (uv.y - (lB + 0.1)) / 0.05);
     }
-    else if(uv.y < 0.75) // 0.65 to 0.75
+    else if(uv.y < (lB + 0.25)) // 0.65 to 0.75
     {
-        return mix(sky[3], sky[4], (uv.y - 0.65) / 0.1);
+        return mix(sky[3], sky[4], (uv.y - (lB + 0.15)) / 0.1);
     }
     return sky[4]; // 0.75 to 1
 }

@@ -105,7 +105,7 @@ void main()
 void computeGround() {
     // terrain noise calculation
     float summedNoise = 0.0;
-    float amplitude = 5.f;//u_mountainHeight;
+    float amplitude = 3.f;//u_mountainHeight;
     float val;
     for(int i = 2; i <= 2048; i *= 2) {
         vec3 pos = vec3(vs_Pos) * .02000f  * float(i);
@@ -140,6 +140,7 @@ void computeGround() {
     vec4 modelposition;
     modelposition = u_Model * (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
 
-    fs_Pos = (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
+    //fs_Pos = (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
+    fs_Pos = vs_Pos;
     gl_Position = u_Proj * u_View * modelposition; 
 }
