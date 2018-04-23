@@ -1,10 +1,15 @@
-newmtl alpaca:initialShadingGroup
+newmtl OldPictureFrame2:OldPictureFrame3
 illum 4
-Kd 0.50 0.50 0.50
+Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
-Ni 1.00
-newmtl ground:initialShadingGroup
+map_Kd OldPictureFrame2_Diffuce.jpg
+map_Ka OldPictureFrame2_Diffuce.jpg
+Ni 1.50
+Ks 0.00 0.00 0.00
+map_Ks OldPictureFrame2_SPEC.jpg
+Ns 10.00
+newmtl alpaca:initialShadingGroup
 illum 4
 Kd 0.50 0.50 0.50
 Ka 0.00 0.00 0.00

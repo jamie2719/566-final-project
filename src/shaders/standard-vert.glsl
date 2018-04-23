@@ -24,6 +24,7 @@ out float offset;
 out float landNoise;
 
 void computeGround();
+void computeCloud();
 
 
 
@@ -88,6 +89,9 @@ void main()
     if(vs_Type == 0.0) {
         computeGround();
         return;
+    } else if (vs_Type == 4.0) {
+        computeCloud();
+        return;
     }
     fs_Type = vs_Type;
     fs_Col = vs_Col;
@@ -130,6 +134,7 @@ void computeGround() {
     fs_Col = offsetPos;//vs_Col;
     fs_UV = vs_UV;
     fs_UV.y = 1.0 - fs_UV.y;
+    fs_Type = vs_Type;
 
     // fragment info is in view space
     mat3 invTranspose = mat3(u_ModelInvTr);
@@ -144,3 +149,43 @@ void computeGround() {
     fs_Pos = vs_Pos;
     gl_Position = u_Proj * u_View * modelposition; 
 }
+
+// deform an ellipsoid to get a lumpy kind of cloud
+void computeCloud() {
+    // terrain noise calculation
+    float summedNoise = 0.0;
+    float amplitude = 5.f;//u_mountainHeight;
+    float val;
+    for(int i = 2; i <= 2048; i *= 2) {
+        vec3 pos = vec3(vs_Pos) * .02000f  * float(i);
+        val = trilinearInterpolation(pos);
+        vec3 random = random3(vs_Pos.rgb);
+        if(val > 0.f) {
+           summedNoise += val * amplitude * 10.f;
+        }
+        summedNoise += val * amplitude;
+        amplitude *= .3;
+    }
+
+    val =  summedNoise * .6;
+    vec4 offsetPos = vec4(val * vs_Nor.rgb, 0.0);
+    offsetPos += vs_Pos;
+
+    fs_Col = offsetPos;//vs_Col;
+    fs_UV = vs_UV;
+    fs_UV.y = 1.0 - fs_UV.y;
+    fs_Type = vs_Type;
+
+    // fragment info is in view space
+    mat3 invTranspose = mat3(u_ModelInvTr);
+    mat3 view = mat3(u_View);
+    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);
+    
+    
+    vec4 modelposition;
+    modelposition = u_Model * offsetPos;
+
+    fs_Pos = offsetPos;
+    gl_Position = u_Proj * u_View * modelposition; 
+}
+

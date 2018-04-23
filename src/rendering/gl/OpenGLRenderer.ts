@@ -73,7 +73,7 @@ class OpenGLRenderer {
     this.lightPos = lightPos;
 
     this.currentTime = 0.0;
-    this.gbTargets = [undefined, undefined, undefined];
+    this.gbTargets = [undefined, undefined, undefined, undefined];
     this.post8Buffers = [undefined, undefined];
     this.post8Targets = [undefined, undefined];
     this.post8Passes = [];
@@ -100,13 +100,15 @@ class OpenGLRenderer {
     var gb0loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb0");
     var gb1loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb1");
     var gb2loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb2");
+    var gb3loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb3");
     var shadowMapTex = gl.getUniformLocation(this.deferredShader.prog, "shadowMapTex");
 
     this.deferredShader.use();
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
-    gl.uniform1i(shadowMapTex, 3);
+    gl.uniform1i(gb3loc, 3);
+    gl.uniform1i(shadowMapTex, 4);
 
     var typeTex = gl.getUniformLocation(this.brushStrokes.prog, "u_typeTex");
     this.brushStrokes.use();
@@ -163,7 +165,7 @@ class OpenGLRenderer {
     // refresh the gbuffers
     this.gBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
 
     for (let i = 0; i < this.gbTargets.length; i ++) {
       this.gbTargets[i] = gl.createTexture();
@@ -355,7 +357,7 @@ class OpenGLRenderer {
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[i]);
     }
-    gl.activeTexture(gl.TEXTURE3);
+    gl.activeTexture(gl.TEXTURE4);
     gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
 
     this.deferredShader.draw();

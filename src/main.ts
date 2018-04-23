@@ -27,6 +27,9 @@ import Texture from './rendering/gl/Texture';
 let alpacaS: string;
 let alpaca: Mesh;
 
+let cloudS: string;
+let cloud: Mesh;
+
 let frameS: string;
 let frame: Mesh;
 
@@ -64,6 +67,7 @@ function loadOBJText() {
   alpacaS = readTextFile('../resources/obj/alpaca.obj')
   groundS = readTextFile('../resources/obj/ground.obj')
   wallS = readTextFile('../resources/obj/wall.obj')
+  cloudS = readTextFile('../resources/obj/cloud.obj')
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -108,6 +112,7 @@ function loadScene() {
   alpaca && alpaca.destroy();
   frame && frame.destroy();
   wall && wall.destroy();
+  cloud && cloud.destroy();
 
 
 
@@ -123,6 +128,9 @@ function loadScene() {
 
   wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), 3);
   wall.create();
+
+  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), 4);
+  cloud.create();
 
   alpacaTex = new Texture('../resources/textures/alpaca.jpg');
   frameTex = new Texture('../resources/textures/wood.jpg');
@@ -188,6 +196,7 @@ function main() {
   mat4.invert(invViewProj, invViewProj);
   mat4.multiply(shadowMat, light.viewMatrix, invViewProj);
 
+  gl.enable(gl.BLEND);
   renderer.setLightMatrices(shadowMat, light.projectionMatrix, light.viewMatrix);
   standardDeferred.setProjMatrix(camera.projectionMatrix);
 
@@ -196,6 +205,7 @@ function main() {
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+
     timer.updateTime();
     renderer.updateTime(timer.deltaTime, timer.currentTime);
 
@@ -212,7 +222,7 @@ function main() {
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
 
-    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, wall]);
+    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, wall, cloud]);
     //renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);

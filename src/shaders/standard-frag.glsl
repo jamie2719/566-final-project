@@ -13,7 +13,7 @@ uniform mat4 u_View;
 uniform mat4 u_ModelInvTr;  
 
 uniform vec3 u_LightPos;
-out vec4 fragColor[3]; // The data in the ith index of this array of outputs
+out vec4 fragColor[4]; // The data in the ith index of this array of outputs
                        // is passed to the ith index of OpenGLRenderer's
                        // gbTargets array, which is an array of textures.
                        // This lets us output different types of data,
@@ -28,7 +28,51 @@ in float offset;
 in float landNoise;
 
 vec3 terrainCol();
+vec3 wallCol = vec3(178.0, 199.0, 232.0) / 255.0;
 
+float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
+
+float noise(in vec3 p){
+    vec3 a = floor(p);
+    vec3 d = p - a;
+    d = d * d * (3.0 - 2.0 * d);
+
+    vec4 b = vec4(a.x, a.x, a.y, a.y) + vec4(0.0, 1.0, 0.0, 1.0);
+    vec4 k1 = perm(b.xyxy);
+    vec4 k2 = perm(k1.xyxy + b.zzww);
+
+    vec4 c = k2 + vec4(a.z, a.z, a.z, a.z);
+    vec4 k3 = perm(c);
+    vec4 k4 = perm(c + 1.0);
+
+    vec4 o1 = fract(k3 * (1.0 / 41.0));
+    vec4 o2 = fract(k4 * (1.0 / 41.0));
+
+    vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
+    vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
+
+    return o4.y * d.y + o4.x * (1.0 - d.y);
+}
+
+float fbm(const in vec3 uv)
+{
+    float a = 0.5;
+    float f = 5.0;
+    float n = 0.;
+    int it = 8;
+    for(int i = 0; i < 15; i++)
+    {
+        if(i<it)
+        {
+            n += noise(uv*f)*a;
+            a *= .5;
+            f *= 2.;
+        }
+    }
+    return n;
+}
 
 void main() {
 
@@ -40,19 +84,23 @@ void main() {
     vec4 Nor = vec4(view * invTranspose * fs_Nor.xyz, 0);
     vec4 pos = u_View * u_Model * fs_Pos;
 
-    vec3 col;
+    vec4 cloudAlpha = vec4(0.0);
+    vec4 col;
     if(fs_Type == 0.0) {
-        col = terrainCol();
+        col = vec4(terrainCol(), 1.0);
     } else if(fs_Type == 1.0){
-        col = texture(tex_Color0, fs_UV).rgb;
+        col = texture(tex_Color0, fs_UV);
     } else if (fs_Type == 2.0) {
-        col = texture(tex_Color1, fs_UV).rgb;
+        col = texture(tex_Color1, fs_UV);
     } else if (fs_Type == 3.0) {
-        col = texture(tex_Color2, fs_UV).rgb;
+        col = vec4(wallCol, 1.0);
+    } else if (fs_Type == 4.0) {
+        float heightField = fbm(fs_Nor.brg);
+        cloudAlpha = vec4(1.0);
     }
 
     // if using textures, inverse gamma correct
-    col = pow(col, vec3(2.2));
+    col.rgb = pow(col.rgb, vec3(2.2));
 
     // depth in camera screenspace
     vec4 projPos = (u_Proj * pos);
@@ -62,10 +110,13 @@ void main() {
     fragColor[0] = vec4(Nor.xyz, depth);
     
     // 1 since mesh overlaps
-    fragColor[1] = vec4(1.0);
+    fragColor[1] = vec4(1.0, 1.0, 1.0, 1.0);
 
     // albedo
-    fragColor[2] = vec4(col, fs_Type);
+    fragColor[2] = vec4(col.rgb, fs_Type);
+
+    // cloud transparency
+    fragColor[3] = cloudAlpha;
 
 }
 
@@ -78,9 +129,7 @@ vec3 terrainCol() {
 
      vec3 tanGrass = vec3(204.0f / 255.0f, 133.0 / 255.0f, 60.0 / 255.0f);
      vec3 grass = vec3(210.f / 255.f, 143.0f / 255.0f, 63.0f / 255.0);
-     vec3 hill = vec3(167.0f / 255.0f, 111.0f / 255.0f, 43.0f / 255.0);
-
-
+     vec3 hill = vec3(242.0f / 255.0f, 179.0f / 255.0f, 111.0f / 255.0);
 /*
     if(offset > .2) { 
         diffuseColor = hill + vec3(landNoise * .57, 0.0, 0.0); // mountain

@@ -12,6 +12,7 @@ const float TWO_PI = 6.28318530718;
 uniform sampler2D u_gb0;
 uniform sampler2D u_gb1;
 uniform sampler2D u_gb2;
+uniform sampler2D u_gb3;
 uniform sampler2D shadowMapTex;
 
 uniform mat4 u_ShadowMat;
@@ -91,6 +92,9 @@ void main() {
     float type = texture(u_gb2, fs_UV).w;
 	
 	vec4 meshOverlap = texture(u_gb1, fs_UV);
+
+    vec4 cloudColor = texture(u_gb3, fs_UV);
+
 	vec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
 
 	// lambertian term for blinn 
@@ -102,15 +106,17 @@ void main() {
 	float lightIntensity = diffuseTerm + ambientTerm; 
 
 	//diffuseColor = diffuseColor * lightIntensity;
-	if(meshOverlap != vec4(1.0)) {
+	if(meshOverlap.xyz != vec3(1.0)) {
 		out_Col = skyShader();
 		return;
 	}
+    // 1 corresponds to frame/wall? 
 	if(!isVisible(fs_Nor.w) && type != 1.0 && type != 2.0) {
 		out_Col = diffuseColor * 0.5;  
 	} else {
 		out_Col = vec4(diffuseColor.xyz, 1.0);
 	}
+
     // distance fog
     vec4 fogColor = vec4(sky[3].xyz, 1.0);
 
@@ -132,7 +138,7 @@ void main() {
     if (camDist > maxFogDist) {
         out_Col = fogColor;
     }
-    //out_Col = vec4();
+    out_Col += cloudColor;
     
 }
 
