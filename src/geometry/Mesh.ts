@@ -20,53 +20,7 @@ class Mesh extends Drawable {
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
     this.type = type;
     this.objString = objString;
-  }
 
-  addMeshComponent(m: Mesh) {
-      
-    var tempP = this.positions;
-    if(this.positions.length != 0) {
-      
-      this.positions = new Float32Array(tempP.length + m.positions.length);
-      this.positions.set(tempP);
-      this.positions.set(m.positions, tempP.length);
-    }
-    else {
-      this.positions = new Float32Array(m.positions.length);
-      this.positions.set(m.positions);
-    }
-
-    if(this.normals != null) {
-      var tempN = this.normals;
-      this.normals = new Float32Array(tempN.length + m.normals.length);
-      this.normals.set(tempN);
-      this.normals.set(m.normals, tempN.length);
-    }
-    else {
-      this.normals.set(m.normals);
-    }
-
-    if(this.indices != null) {
-
-      var tempI = this.indices;
-      this.indices = new Uint32Array(tempI.length + m.indices.length);
-      this.indices.set(tempI);
-      var j = tempI.length;
-      for(var i = 0; i < m.indices.length; i++) {
-        this.indices[j] = m.indices[i] + tempP.length/4;
-        j++;
-      }
-    }
-    else {
-      this.indices.set(m.indices);
-    }
-
-    this.count = this.indices.length;
-
-    return this;
-  }
-
-  create() {  
     let posTemp: Array<number> = [];
     let norTemp: Array<number> = [];
     let uvsTemp: Array<number> = [];
@@ -101,6 +55,84 @@ class Mesh extends Drawable {
     this.positions = new Float32Array(posTemp);
     this.uvs = new Float32Array(uvsTemp);
 
+  }
+
+  addMeshComponent(m: Mesh) {
+      console.log(m);
+   
+    if(this.positions.length != 0) {
+      var tempP = this.positions;
+      this.positions = new Float32Array(tempP.length + m.positions.length);
+      this.positions.set(tempP);
+      this.positions.set(m.positions, tempP.length);
+    }
+    else {
+      this.positions = new Float32Array(m.positions.length);
+      this.positions.set(m.positions);
+    }
+
+    if(this.normals != null) {
+      var tempN = this.normals;
+      this.normals = new Float32Array(tempN.length + m.normals.length);
+      this.normals.set(tempN);
+      this.normals.set(m.normals, tempN.length);
+    }
+    else {
+      this.normals.set(m.normals);
+    }
+
+    if(this.indices != null) {
+
+      var tempI = this.indices;
+      this.indices = new Uint32Array(tempI.length + m.indices.length);
+      this.indices.set(tempI);
+      var j = tempI.length;
+      for(var i = 0; i < m.indices.length; i++) {
+        this.indices[j] = m.indices[i] + tempP.length/4;
+        j++;
+      }
+    }
+    else {
+      this.indices.set(m.indices);
+    }
+
+    if(this.colors != null) {
+      var tempC = this.colors;
+      this.colors = new Float32Array(tempC.length + m.colors.length);
+      this.colors.set(tempC);
+      this.colors.set(m.colors, tempC.length);
+    }
+    else {
+      this.colors.set(m.colors);
+    }
+
+    if(this.uvs != null) {
+      var tempUV = this.uvs;
+      this.uvs = new Float32Array(tempUV.length + m.uvs.length);
+      this.uvs.set(tempUV);
+      this.uvs.set(m.uvs, tempUV.length);
+    }
+    else {
+      this.uvs.set(m.uvs);
+    }
+
+    if(this.types != null) {
+      var tempT = this.types;
+      this.types = new Float32Array(tempT.length + m.types.length);
+      this.types.set(tempT);
+      this.types.set(m.types, tempT.length);
+    }
+    else {
+      this.types.set(m.types);
+    }
+
+    this.count = this.indices.length;
+
+    return this;
+  }
+
+  create() {  
+    
     this.generateIdx();
     this.generatePos();
     this.generateNor();

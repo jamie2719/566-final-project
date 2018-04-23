@@ -115,12 +115,13 @@ class TurtleParser {
             oldTurtlePos.set(this.currTurtle.currPos); //
 
             //translate turtle forward
-            this.currTurtle.moveForward(5);
+            this.currTurtle.moveForward(39);
 
             //find center of new branch- average of old pos and new pos
             var newCenter = vec3.create();
             vec3.add(newCenter, oldTurtlePos, this.currTurtle.currPos);
             vec3.scale(newCenter, newCenter, .5);
+
 
             //convert positions (of default branch) into vec4s, transform, and convert back
             var posVectors = TurtleParser.VBOtoVec4(this.defaultBranch.positions);
@@ -138,7 +139,7 @@ class TurtleParser {
             //shift positions of default branch so new branch is at correct offset
             newBranch = this.shiftBranch(newCenter, newBranch);
 
-            newBranch.create();
+            //newBranch.create();
             //actually draw branch
             meshDrawable = meshDrawable.addMeshComponent(newBranch);
         }
@@ -197,29 +198,29 @@ class TurtleParser {
         // else if(symbolNode.char == 'V') {
         //     this.currTurtle.rotate(vec3.fromValues(-20, 0, 0));
         // }
-        else if(symbolNode.char == 'L') {
-           var posVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.positions);
-              var norVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.normals);
+        // else if(symbolNode.char == 'L') {
+        //    var posVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.positions);
+        //       var norVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.normals);
               
-              posVectors = this.transformVectors(posVectors, this.currTurtle.rotMat);
-              norVectors = this.transformVectors(norVectors, this.currTurtle.rotMat); //change to inverse transpose
+        //       posVectors = this.transformVectors(posVectors, this.currTurtle.rotMat);
+        //       norVectors = this.transformVectors(norVectors, this.currTurtle.rotMat); //change to inverse transpose
    
-              //create new leaf at that new center point
-              var newCenter = vec3.create();
-              vec3.add(newCenter, this.currTurtle.currPos, vec3.fromValues(.6, 0, 0));
-              var newLeaf = this.createLeaf(newCenter);
+        //       //create new leaf at that new center point
+        //       var newCenter = vec3.create();
+        //       vec3.add(newCenter, this.currTurtle.currPos, vec3.fromValues(.6, 0, 0));
+        //       var newLeaf = this.createLeaf(newCenter);
 
   
-              newLeaf.positions = TurtleParser.Vec4toVBO(posVectors);
-              newLeaf.normals = TurtleParser.Vec4toVBO(norVectors);
+        //       newLeaf.positions = TurtleParser.Vec4toVBO(posVectors);
+        //       newLeaf.normals = TurtleParser.Vec4toVBO(norVectors);
 
   
-              //shift positions of default leaf so new leaf is at correct offset
-              newLeaf = this.shiftLeaf(newCenter, newLeaf);
-              newLeaf.create();
-              //actually draw leaf
-              meshDrawable = meshDrawable.addMeshComponent(newLeaf);
-        }
+        //       //shift positions of default leaf so new leaf is at correct offset
+        //       newLeaf = this.shiftLeaf(newCenter, newLeaf);
+        //       newLeaf.create();
+        //       //actually draw leaf
+        //       meshDrawable = meshDrawable.addMeshComponent(newLeaf);
+        // }
         return meshDrawable;
 
     };

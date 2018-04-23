@@ -21,7 +21,7 @@ import CharNode from './LSystem/CharNode';
 
 const controls = {
   Iterations: 0,
-  Axiom: "FL",
+  Axiom: "F[.F][+F][*F]",
   Reload: function() {loadScene()}
 };
 
@@ -61,20 +61,17 @@ var timer = {
 }
 
 function loadTrees() {
-  treeMesh = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
-  treeMesh.create();
+  treeMesh = new Mesh(branchS, vec3.fromValues(0, 0, 0), 1);
   lsystem = new LSystem(controls.Axiom, controls.Iterations);
   lsystem.doIterations();
   console.log(lsystem.seed);
 
   //load in default branch vertex data
   var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
-  branchDef.create();
   var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 3);
-  leafDef.create();
   var trunk = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
-  trunk.create();
 
+  console.log(treeMesh);
   //treeMesh.addMeshComponent(trunk);
   //create first turtle
   var currTurtle = new Turtle(vec3.fromValues(0, 0, 0));
@@ -86,7 +83,6 @@ function loadTrees() {
   turtleParser.defaultBranch = branchDef;
   console.log(branchDef);
   turtleParser.defaultLeaf = leafDef;
-  //turtleParser.createBranch();
   treeMesh = turtleParser.renderSymbols(CharNode.stringToLinkedList(lsystem.seed), treeMesh);
   treeMesh.create();
 }
@@ -158,7 +154,7 @@ function loadScene() {
    //tex1 = new Texture('../resources/textures/grass.bmp')
 
 
-  loadTrees(); 
+  loadTrees();  
 
 }
 
@@ -250,7 +246,7 @@ function main() {
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
 
-    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground]);
+    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, treeMesh]);
     //renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);
