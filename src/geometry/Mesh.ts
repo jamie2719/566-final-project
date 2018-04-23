@@ -22,6 +22,50 @@ class Mesh extends Drawable {
     this.objString = objString;
   }
 
+  addMeshComponent(m: Mesh) {
+      
+    var tempP = this.positions;
+    if(this.positions.length != 0) {
+      
+      this.positions = new Float32Array(tempP.length + m.positions.length);
+      this.positions.set(tempP);
+      this.positions.set(m.positions, tempP.length);
+    }
+    else {
+      this.positions = new Float32Array(m.positions.length);
+      this.positions.set(m.positions);
+    }
+
+    if(this.normals != null) {
+      var tempN = this.normals;
+      this.normals = new Float32Array(tempN.length + m.normals.length);
+      this.normals.set(tempN);
+      this.normals.set(m.normals, tempN.length);
+    }
+    else {
+      this.normals.set(m.normals);
+    }
+
+    if(this.indices != null) {
+
+      var tempI = this.indices;
+      this.indices = new Uint32Array(tempI.length + m.indices.length);
+      this.indices.set(tempI);
+      var j = tempI.length;
+      for(var i = 0; i < m.indices.length; i++) {
+        this.indices[j] = m.indices[i] + tempP.length/4;
+        j++;
+      }
+    }
+    else {
+      this.indices.set(m.indices);
+    }
+
+    this.count = this.indices.length;
+
+    return this;
+  }
+
   create() {  
     let posTemp: Array<number> = [];
     let norTemp: Array<number> = [];

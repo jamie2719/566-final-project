@@ -14,15 +14,16 @@ import {setGL} from './globals';
 import {readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture from './rendering/gl/Texture';
+import LSystem from './LSystem/LSystem';
+import TurtleParser from './LSystem/TurtleParser';
+import Turtle from './LSystem/Turtle';
+import CharNode from './LSystem/CharNode';
 
-// Define an object with application parameters and button callbacks
-// const controls = {
-//   // Extra credit: Add interactivity
-// };
-
-//let groundPlane: Cube;
-
-// TODO: replace with your scene's stuff
+const controls = {
+  Iterations: 0,
+  Axiom: "FL",
+  Reload: function() {loadScene()}
+};
 
 let alpacaS: string;
 let alpaca: Mesh;
@@ -33,10 +34,18 @@ let wahoo: Mesh;
 let groundS: string;
 let ground: Mesh;
 
-// let ground: Cube;
-
 let alpacaTex: Texture;
 let wahooTex: Texture;
+
+let treeMesh : Mesh;
+let branchS: string;
+let leafS: string;
+let lsystem: LSystem;
+let turtleParser: TurtleParser;
+//original obj data for branches
+let indicesB: Uint32Array; 
+let positionsB: Float32Array;
+let normalsB: Float32Array;
 
 
 var timer = {
@@ -51,12 +60,45 @@ var timer = {
   },
 }
 
+function loadTrees() {
+  treeMesh = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
+  treeMesh.create();
+  lsystem = new LSystem(controls.Axiom, controls.Iterations);
+  lsystem.doIterations();
+  console.log(lsystem.seed);
+
+  //load in default branch vertex data
+  var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
+  branchDef.create();
+  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 3);
+  leafDef.create();
+  var trunk = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
+  trunk.create();
+
+  //treeMesh.addMeshComponent(trunk);
+  //create first turtle
+  var currTurtle = new Turtle(vec3.fromValues(0, 0, 0));
+  //create turtle stack
+  turtleParser = new TurtleParser(currTurtle);
+
+  
+  //set turtle stack's default branch to the branch you created
+  turtleParser.defaultBranch = branchDef;
+  console.log(branchDef);
+  turtleParser.defaultLeaf = leafDef;
+  //turtleParser.createBranch();
+  treeMesh = turtleParser.renderSymbols(CharNode.stringToLinkedList(lsystem.seed), treeMesh);
+  treeMesh.create();
+}
 
 function loadOBJText() {
 
   alpacaS = readTextFile('./resources/obj/alpaca.obj')
   wahooS = readTextFile('./resources/obj/wahoo.obj')
   groundS = readTextFile('./resources/obj/ground.obj')
+
+  branchS = readTextFile('./resources/obj/branch1OBJ.obj');
+  leafS = readTextFile('./resources/obj/leaf.obj');
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -105,27 +147,6 @@ function loadScene() {
 
   //setup ground plane
   ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
-  // var posVectors = VBOtoVec4(ground.positions);
-  // var norVectors = VBOtoVec4(ground.normals);
-  // var groundRot = mat4.create();
-  // var invRot = mat4.create();
-  // groundRot = mat4.rotateX(groundRot, groundRot, Math.PI * 90 / 180);
-  // invRot = mat4.transpose(invRot, groundRot);
-  // var groundScale = mat4.create();
-  // groundScale = mat4.scale(groundScale, groundScale, vec3.fromValues(10, 10, 10));
-  // transformVectors(posVectors, groundRot);
-  // transformVectors(norVectors,invRot);
-  // transformVectors(posVectors, groundScale);
-  // // var translation = vec4.fromValues(0, 1, 0, 0);
-  // // for(var i = 0; i < posVectors.length; i++) {
-  // //   var newVector: vec4 = vec4.create();
-  // //   newVector = vec4.add(newVector, posVectors[i], translation);
-
-  // //   posVectors[i] = newVector;
-  // // }
-  // ground.positions = Vec4toVBO(posVectors);
-  // ground.normals = Vec4toVBO(norVectors);
-  
   ground.create();
 
   alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), 1);
@@ -135,6 +156,9 @@ function loadScene() {
   alpacaTex = new Texture('./resources/textures/alpaca.jpg')
   wahooTex = new Texture('./resources/textures/wahoo.bmp')
    //tex1 = new Texture('../resources/textures/grass.bmp')
+
+
+  loadTrees(); 
 
 }
 
@@ -148,8 +172,10 @@ function main() {
   stats.domElement.style.top = '0px';
   document.body.appendChild(stats.domElement);
 
-  // Add controls to the gui
-  // const gui = new DAT.GUI();
+  const gui = new DAT.GUI();
+  gui.add(controls, 'Iterations', 0, 10).step(1);
+  gui.add(controls, 'Axiom');
+  gui.add(controls, 'Reload');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
