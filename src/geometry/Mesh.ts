@@ -6,6 +6,7 @@ import * as Loader from 'webgl-obj-loader';
 class Mesh extends Drawable {
   indices: Uint32Array;
   positions: Float32Array;
+  offsets: Float32Array; // Data for bufTranslate
   normals: Float32Array;
   colors: Float32Array;
   types: Float32Array;
@@ -44,11 +45,15 @@ class Mesh extends Drawable {
 
     // white vert color for now
     this.colors = new Float32Array(posTemp.length);
-    this.types = new Float32Array(posTemp.length);
+    this.types = new Float32Array(posTemp.length / 4.0);
     for (var i = 0; i < posTemp.length; ++i){
-      this.types[i] = this.type;
       this.colors[i] = 1.0;
     }
+
+    for (var i = 0; i < posTemp.length / 4.0; ++i){
+      this.types[i] = this.type;
+    }
+
 
     this.indices = new Uint32Array(idxTemp);
     this.normals = new Float32Array(norTemp);
@@ -139,6 +144,7 @@ class Mesh extends Drawable {
     this.generateUV();
     this.generateCol();
     this.generateType();
+    
 
     this.count = this.indices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
@@ -162,6 +168,13 @@ class Mesh extends Drawable {
 
     console.log(`Created Mesh from OBJ`);
     this.objString = ""; // hacky clear
+  }
+
+  setInstanceVBOs(offsets: Float32Array, colors: Float32Array) {
+    this.offsets = offsets;
+    this.generateTranslate();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTranslate);
+    gl.bufferData(gl.ARRAY_BUFFER, this.offsets, gl.STATIC_DRAW);
   }
 };
 

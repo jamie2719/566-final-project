@@ -9,15 +9,18 @@ import Cube from './geometry/Cube';
 import Mesh from './geometry/Mesh';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
-import Light from './LIght';
+import Light from './Light';
 import {setGL} from './globals';
 import {readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture from './rendering/gl/Texture';
+
 import LSystem from './LSystem/LSystem';
 import TurtleParser from './LSystem/TurtleParser';
 import Turtle from './LSystem/Turtle';
 import CharNode from './LSystem/CharNode';
+
+import Cloud from './geometry/Cloud'
 
 const controls = {
   Iterations: 0,
@@ -28,6 +31,17 @@ const controls = {
 let alpacaS: string;
 let alpaca: Mesh;
 
+let cloudS: string;
+let cloud: Mesh;
+
+let clouds: Cloud;
+
+let frameS: string;
+let frame: Mesh;
+
+let wallS: string;
+let wall: Mesh;
+
 let wahooS: string;
 let wahoo: Mesh;
 
@@ -35,7 +49,8 @@ let groundS: string;
 let ground: Mesh;
 
 let alpacaTex: Texture;
-let wahooTex: Texture;
+let frameTex: Texture;
+let wallTex: Texture;
 
 let treeMesh : Mesh;
 let branchS: string;
@@ -88,14 +103,18 @@ function loadTrees() {
 }
 
 function loadOBJText() {
-  
-  alpacaS = readTextFile('./resources/obj/alpaca.obj')
-  wahooS = readTextFile('./resources/obj/wahoo.obj')
-  groundS = readTextFile('./resources/obj/ground.obj')
+ 
+  alpacaS = readTextFile('./resources/obj/alpaca.obj');
+  // wahooS = readTextFile('./resources/obj/wahoo.obj');
+  groundS = readTextFile('./resources/obj/ground.obj');
 
   branchS = readTextFile('./resources/obj/branch1OBJ.obj');
   leafS = readTextFile('./resources/obj/leaf.obj');
 
+  frameS = readTextFile('./resources/obj/frame.obj');
+  
+  wallS = readTextFile('./resources/obj/wall.obj');
+  cloudS = readTextFile('./resources/obj/cloud.obj');
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -138,9 +157,9 @@ function Vec4toVBO(vectors: Array<vec4>) {
 function loadScene() {
   ground && ground.destroy();
   alpaca && alpaca.destroy();
-  wahoo && wahoo.destroy();
-
-
+  frame && frame.destroy();
+  wall && wall.destroy();
+  cloud && cloud.destroy();
 
   //setup ground plane
   ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
@@ -149,11 +168,31 @@ function loadScene() {
   alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), 1);
   alpaca.create();
 
+  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), 2);
+  frame.create();
+
+  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), 3);
+  wall.create();
+
+  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), 4);
+  cloud.create();
+
+  
+  clouds = new Cloud();
+  clouds.setData();
 
 
-  alpacaTex = new Texture('./resources/textures/alpaca.jpg')
-  wahooTex = new Texture('./resources/textures/wahoo.bmp')
-   //tex1 = new Texture('./resources/textures/grass.bmp')
+  let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+  let colors: Float32Array = new Float32Array(clouds.getColors());
+  cloud.setInstanceVBOs(offsets, colors);
+  let n = clouds.getNumParticles();
+  cloud.setNumInstances(n * n);
+
+
+  alpacaTex = new Texture('./resources/textures/alpaca.jpg');
+  frameTex = new Texture('./resources/textures/wood.jpg');
+  wallTex = new Texture('./resources/textures/paint.jpg');
+
 
 
   loadTrees();  
@@ -188,7 +227,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 40, 100), vec3.fromValues(0, 9, 0));
+  const camera = new Camera(vec3.fromValues(0, 50, 300), vec3.fromValues(0, 50, 0));
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
@@ -209,37 +248,35 @@ function main() {
       new Shader(gl.FRAGMENT_SHADER, require('./shaders/shadow-frag.glsl')),
       ]);
 
-  // const standardTerrain = new ShaderProgram([
-  //   new Shader(gl.VERTEX_SHADER, require('./shaders/Terrain/terrain-vert.glsl')),
-  //   new Shader(gl.FRAGMENT_SHADER, require('./shaders/Terrain/terrain-frag.glsl')),
-  //   ]);
 
-  standardDeferred.setupTexUnits(["tex_Color"]);
+  standardDeferred.setupTexUnits(["tex_Color0"]);
+  standardDeferred.setupTexUnits(["tex_Color1"]);
+  standardDeferred.setupTexUnits(["tex_Color2"]);
 
-  // camera view to light view matrix: light view * inverse(camera view)
   let shadowMat = mat4.create(); 
   let invViewProj = mat4.create();
   mat4.copy(invViewProj, camera.viewMatrix);
   mat4.invert(invViewProj, invViewProj);
   mat4.multiply(shadowMat, light.viewMatrix, invViewProj);
 
+  gl.enable(gl.BLEND);
   renderer.setLightMatrices(shadowMat, light.projectionMatrix, light.viewMatrix);
-
   standardDeferred.setProjMatrix(camera.projectionMatrix);
-
-  //standardTerrain.setupTexUnits(["tex_Color1"]);
 
   function tick() {
     camera.update();
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+
     timer.updateTime();
     renderer.updateTime(timer.deltaTime, timer.currentTime);
 
     renderer.setDimensions(vec2.fromValues(window.innerWidth, window.innerHeight));
 
-    standardDeferred.bindTexToUnit("tex_Color", alpacaTex, 0);
+    standardDeferred.bindTexToUnit("tex_Color0", alpacaTex, 0);
+    standardDeferred.bindTexToUnit("tex_Color1", frameTex, 1);
+    standardDeferred.bindTexToUnit("tex_Color2", wallTex, 2);
 
 
     renderer.clear();
@@ -248,14 +285,14 @@ function main() {
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
 
-    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, treeMesh]);
-    //renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
-    // render from gbuffers into 32-bit color buffer
+
+    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, treeMesh, wall, cloud]);
+// render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
     renderer.renderPostProcessHDR();
     // apply 8-bit post and draw
-    renderer.renderPostProcessLDR();
+    renderer.renderPostProcessLDR(camera);
 
     stats.end();
     requestAnimationFrame(tick);

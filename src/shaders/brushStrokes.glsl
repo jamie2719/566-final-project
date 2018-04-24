@@ -8,6 +8,8 @@ uniform sampler2D u_frame;
 uniform vec2 u_Dimensions;
 uniform float u_Time;
 
+uniform sampler2D u_typeTex;
+
 
 // Interpolation between color and greyscale over time on left half of screen
 void main() {
@@ -47,7 +49,11 @@ void main() {
 	float l = .1 - (0.21 * r + 0.72 * g + 0.07 * b);
     */
 
-
+float type = texture(u_typeTex, fs_UV).w;
+if(type == 1.0) {
+    out_Col = texture(u_frame, fs_UV);
+    return;
+}
 // paint filter
 
     int radius = 8;

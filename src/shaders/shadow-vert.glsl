@@ -12,13 +12,16 @@ in vec4 vs_Pos;
 in vec4 vs_Nor;
 in vec4 vs_Col;
 in vec2 vs_UV;
+in float vs_Type;
 
 out vec4 fs_Pos;
+out float fs_Type;
 
 void main()
 {
 
     gl_Position = u_viewProjOrthoMat * u_Model * vs_Pos;
     fs_Pos = vs_Pos;
+    fs_Type = vs_Type;
 
 }

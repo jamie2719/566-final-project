@@ -27,6 +27,7 @@ class ShaderProgram {
   attrCol: number;
   attrUV: number;
   attrType: number;
+  attrTranslate: number;
 
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
@@ -38,6 +39,8 @@ class ShaderProgram {
   unifDim: WebGLUniformLocation;
   unifLight: WebGLUniformLocation;
   unifViewToLightMat: WebGLUniformLocation;
+  unifCamPos: WebGLUniformLocation;
+
 
   unifLightModel: WebGLUniformLocation;
   unifLightView: WebGLUniformLocation;
@@ -64,6 +67,7 @@ class ShaderProgram {
       throw gl.getProgramInfoLog(this.prog);
     }
 
+    this.attrTranslate = gl.getAttribLocation(this.prog, "vs_Translate");
     this.attrType = gl.getAttribLocation(this.prog, "vs_Type");
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
@@ -78,6 +82,7 @@ class ShaderProgram {
     this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
     this.unifDim = gl.getUniformLocation(this.prog, "u_Dimensions");
     this.unifLight = gl.getUniformLocation(this.prog, "u_LightPos");
+    this.unifCamPos = gl.getUniformLocation(this.prog, "u_CamPos");
 
     this.unifLightModel = gl.getUniformLocation(this.prog, "u_LightModel");
     this.unifLightView = gl.getUniformLocation(this.prog, "u_LightView");
@@ -231,6 +236,13 @@ class ShaderProgram {
     }
   }
 
+  setCamPos(c: vec4) {
+    this.use();
+    if (this.unifCamPos !== -1) {
+      gl.uniform4fv(this.unifCamPos, c);
+    }
+  }
+
   setTime(t: number) {
     this.use();
     if (this.unifTime !== -1) {
@@ -258,36 +270,48 @@ class ShaderProgram {
     if (this.attrType != -1 && d.bindType()) {
       gl.enableVertexAttribArray(this.attrType);
       gl.vertexAttribPointer(this.attrType, 1, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrType, 0); // Advance 1 index in pos VBO for each vertex
     }
 
     if (this.attrPos != -1 && d.bindPos()) {
       gl.enableVertexAttribArray(this.attrPos);
       gl.vertexAttribPointer(this.attrPos, 4, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrPos, 0); // Advance 1 index in pos VBO for each vertex
     }
 
     if (this.attrNor != -1 && d.bindNor()) {
       gl.enableVertexAttribArray(this.attrNor);
       gl.vertexAttribPointer(this.attrNor, 4, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrNor, 0); // Advance 1 index in pos VBO for each vertex
     }
 
     if (this.attrCol != -1 && d.bindCol()) {
       gl.enableVertexAttribArray(this.attrCol);
       gl.vertexAttribPointer(this.attrCol, 4, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrCol, 0); // Advance 1 index in pos VBO for each vertex
     }
 
     if (this.attrUV != -1 && d.bindUV()) {
       gl.enableVertexAttribArray(this.attrUV);
       gl.vertexAttribPointer(this.attrUV, 2, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrUV, 0); // Advance 1 index in pos VBO for each vertex
+    }
+
+    if (this.attrTranslate != -1 && d.bindTranslate()) {
+      gl.enableVertexAttribArray(this.attrTranslate);
+      gl.vertexAttribPointer(this.attrTranslate, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrTranslate, 1); // Advance 1 index in translate VBO for each drawn instance
     }
 
     d.bindIdx();
-    gl.drawElements(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0);
+    gl.drawElementsInstanced(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0, 4);
 
     if (this.attrType != -1) gl.disableVertexAttribArray(this.attrType);
     if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);
     if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
     if (this.attrCol != -1) gl.disableVertexAttribArray(this.attrCol);
     if (this.attrUV != -1) gl.disableVertexAttribArray(this.attrUV);
+    if (this.attrTranslate != -1) gl.disableVertexAttribArray(this.attrTranslate);
   }
 };
 
