@@ -88,13 +88,14 @@ function loadTrees() {
 }
 
 function loadOBJText() {
-
+  
   alpacaS = readTextFile('./resources/obj/alpaca.obj')
   wahooS = readTextFile('./resources/obj/wahoo.obj')
   groundS = readTextFile('./resources/obj/ground.obj')
 
   branchS = readTextFile('./resources/obj/branch1OBJ.obj');
   leafS = readTextFile('./resources/obj/leaf.obj');
+
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -149,9 +150,10 @@ function loadScene() {
   alpaca.create();
 
 
+
   alpacaTex = new Texture('./resources/textures/alpaca.jpg')
   wahooTex = new Texture('./resources/textures/wahoo.bmp')
-   //tex1 = new Texture('../resources/textures/grass.bmp')
+   //tex1 = new Texture('./resources/textures/grass.bmp')
 
 
   loadTrees();  

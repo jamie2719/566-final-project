@@ -115,7 +115,7 @@ class TurtleParser {
             oldTurtlePos.set(this.currTurtle.currPos); //
 
             //translate turtle forward
-            this.currTurtle.moveForward(39);
+            this.currTurtle.moveForward(22);
 
             //find center of new branch- average of old pos and new pos
             var newCenter = vec3.create();
