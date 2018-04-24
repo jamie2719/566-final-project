@@ -63,8 +63,6 @@ class Mesh extends Drawable {
   }
 
   addMeshComponent(m: Mesh) {
-      console.log(m);
-   
     if(this.positions.length != 0) {
       var tempP = this.positions;
       this.positions = new Float32Array(tempP.length + m.positions.length);

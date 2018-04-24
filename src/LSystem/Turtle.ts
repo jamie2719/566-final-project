@@ -14,13 +14,14 @@ class Turtle {
     next: Turtle;
     prev: Turtle;
  
-    constructor(pos : vec3, dir: vec3) {
+    constructor(pos : vec3, dir: vec3, rotMat: mat4) {
         this.currPos = vec3.create();
         vec3.set(this.currPos, pos[0], pos[1], pos[2]);
         this.currDir = vec3.create();
         //this.currDir = vec3.fromValues(0, 1, 0);
         vec3.set(this.currDir, dir[0], dir[1], dir[2]);
         this.rotMat = mat4.create();
+        this.rotMat = mat4.copy(this.rotMat, rotMat);
     }
 
 
@@ -38,9 +39,9 @@ class Turtle {
         return rotatex;
     }
 
-    moveForward(z: number) {
+    moveForward(z: number, dir: vec3) {
         var amount: vec3 = vec3.create();
-        vec3.scale(amount, this.currDir, z);
+        vec3.scale(amount, dir, z);
         this.currPos = vec3.add(this.currPos, this.currPos, amount);
     
     }
@@ -52,7 +53,7 @@ class Turtle {
         newRot = (this.computeRotMat(rot));
 
         //multilpy current rotation matrix by new rotation
-        mat4.multiply(this.rotMat, this.rotMat, newRot);
+        mat4.multiply(this.rotMat, newRot, this.rotMat);
 
         //rotate dir by total rotation matrix
         vec3.transformMat4(this.currDir, vec3.fromValues(0, 1, 0), this.rotMat); 

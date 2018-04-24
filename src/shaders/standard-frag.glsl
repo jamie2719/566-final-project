@@ -23,7 +23,8 @@ out vec4 fragColor[3]; // The data in the ith index of this array of outputs
 uniform sampler2D tex_Color0; // alpaca
 uniform sampler2D tex_Color1; // frame
 uniform sampler2D tex_Color2; // wall
-uniform sampler2D tex_Color3; // tree
+uniform sampler2D tex_Color3; // tree bark
+uniform sampler2D tex_Color4; // leaf
 
 in float offset;
 in float landNoise;
@@ -99,11 +100,13 @@ void main() {
         col = fs_Col;
     } else if (fs_Type == 5.0) { //tree
         col = texture(tex_Color3, fs_UV);
-    } 
+    } else if (fs_Type == 6.0) { //leaf
+        col = texture(tex_Color4, fs_UV);
+    }
 
     // if using textures, inverse gamma correct
     col.rgb = pow(col.rgb, vec3(2.2));
-
+ 
     // depth in camera screenspace
     vec4 projPos = (u_Proj * pos);
     float depth = projPos.z / projPos.w;

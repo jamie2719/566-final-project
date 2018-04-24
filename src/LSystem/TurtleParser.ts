@@ -58,7 +58,7 @@ class TurtleParser {
     }
 
     createLeaf(center: vec3) {
-        var newLeaf = new Mesh(this.leafS, center, 5);
+        var newLeaf = new Mesh(this.leafS, center, 6);
         // newLeaf.positions = new Float32Array(this.defaultLeaf.positions);
         // newLeaf.normals = new Float32Array(this.defaultLeaf.normals);
         // newLeaf.indices = new Uint32Array(this.defaultLeaf.indices);
@@ -114,8 +114,15 @@ class TurtleParser {
             var oldTurtlePos = vec3.create();
             oldTurtlePos.set(this.currTurtle.currPos); //
 
+            this.currTurtle.moveForward(28, this.currTurtle.currDir);
             //translate turtle forward
-            this.currTurtle.moveForward(22);
+            // if(this.turtleHead != null) {
+                
+            //     this.currTurtle.moveForward(25, this.turtleHead.currDir);
+            // }
+            // else {
+            //     //this.currTurtle.moveForward(50, vec3.fromValues(0, 1, 0));
+            // }
 
             //find center of new branch- average of old pos and new pos
             var newCenter = vec3.create();
@@ -142,6 +149,10 @@ class TurtleParser {
             //newBranch.create();
             //actually draw branch
             meshDrawable = meshDrawable.addMeshComponent(newBranch);
+
+            //add ending leaf next to F after last iteration finishes expanding
+
+
         }
 
         //rotate around x axis
@@ -151,12 +162,14 @@ class TurtleParser {
         else if(symbolNode.char == '-') {
             this.currTurtle.rotate(vec3.fromValues(-30, 0, 0));
         }
+        //rotate around y axis
         else if(symbolNode.char == '>') {
             this.currTurtle.rotate(vec3.fromValues(0, 30, 0));
         }
         else if(symbolNode.char == '<') {
             this.currTurtle.rotate(vec3.fromValues(0, -30, 0));
         }
+        // rotate around z axis
         else if(symbolNode.char == '*') {
             this.currTurtle.rotate(vec3.fromValues(0, 0, -30));
         }
@@ -167,60 +180,60 @@ class TurtleParser {
 
 
         else if(symbolNode.char == '[') {
-            var parentTransform = mat4.create();
+            //var parentTransform = mat4.create();
             //push new turtle with current state onto stack
-            if(this.turtleHead != null) {
-                var temp = this.turtleHead;
-                Turtle.linkTurtles(this.currTurtle, temp);
-            }
 
-            this.turtleHead = new Turtle(this.currTurtle.currPos, this.currTurtle.currDir); 
+            //console.log("currTurtle before push: " + this.currTurtle.currDir);
+            var newHead = new Turtle(this.currTurtle.currPos, this.currTurtle.currDir, this.currTurtle.rotMat); 
+        
+            if(this.turtleHead != null) {
+
+            //console.log("turtleHead before push: " + this.turtleHead.currDir);
+                var temp = this.turtleHead;
+                Turtle.linkTurtles(newHead, temp);
+            }
+            this.turtleHead = newHead;
         }
         else if(symbolNode.char == ']') {
             //pop off head of stack and set curr to that
             if(this.turtleHead != null) {
-                var temp = new Turtle(this.turtleHead.currPos, this.turtleHead.currDir);
+                var temp = new Turtle(this.turtleHead.currPos, this.turtleHead.currDir, this.turtleHead.rotMat);
                 this.currTurtle = temp;
                 this.turtleHead = this.turtleHead.next;
+                //console.log("currTurtle after pop: " + this.currTurtle.currDir);
+                if(this.turtleHead!=null) {
+                    //console.log("turtleHead after pop: " + this.turtleHead.currDir); 
+                }
+                else {
+                    //console.log("turtle head is null");
+                }
             }
+
+         
         }
-
-        // //rotate around x axis
-        // else if(symbolNode.char == 'E') {
-        //     this.currTurtle.rotate(vec3.fromValues(40, 0, 0));
-        // }
-        // else if(symbolNode.char == 'R') {
-        //     this.currTurtle.rotate(vec3.fromValues(-40, 0, 0));
-        // }
-        // else if(symbolNode.char == 'B') {
-        //     this.currTurtle.rotate(vec3.fromValues(20, 0, 0));
-        // }
-        // else if(symbolNode.char == 'V') {
-        //     this.currTurtle.rotate(vec3.fromValues(-20, 0, 0));
-        // }
-        // else if(symbolNode.char == 'L') {
-        //    var posVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.positions);
-        //       var norVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.normals);
+        else if(symbolNode.char == 'L') {
+           var posVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.positions);
+              var norVectors = TurtleParser.VBOtoVec4(this.defaultLeaf.normals);
               
-        //       posVectors = this.transformVectors(posVectors, this.currTurtle.rotMat);
-        //       norVectors = this.transformVectors(norVectors, this.currTurtle.rotMat); //change to inverse transpose
+              posVectors = this.transformVectors(posVectors, this.currTurtle.rotMat);
+              norVectors = this.transformVectors(norVectors, this.currTurtle.rotMat); //change to inverse transpose
    
-        //       //create new leaf at that new center point
-        //       var newCenter = vec3.create();
-        //       vec3.add(newCenter, this.currTurtle.currPos, vec3.fromValues(.6, 0, 0));
-        //       var newLeaf = this.createLeaf(newCenter);
+              //create new leaf at that new center point
+              var newCenter = vec3.create();
+              vec3.add(newCenter, this.currTurtle.currPos, vec3.fromValues(0, 0, 0));
+              var newLeaf = this.createLeaf(newCenter);
 
   
-        //       newLeaf.positions = TurtleParser.Vec4toVBO(posVectors);
-        //       newLeaf.normals = TurtleParser.Vec4toVBO(norVectors);
+              newLeaf.positions = TurtleParser.Vec4toVBO(posVectors);
+              newLeaf.normals = TurtleParser.Vec4toVBO(norVectors);
 
   
-        //       //shift positions of default leaf so new leaf is at correct offset
-        //       newLeaf = this.shiftLeaf(newCenter, newLeaf);
-        //       newLeaf.create();
-        //       //actually draw leaf
-        //       meshDrawable = meshDrawable.addMeshComponent(newLeaf);
-        // }
+              //shift positions of default leaf so new leaf is at correct offset
+              newLeaf = this.shiftLeaf(newCenter, newLeaf);
+              newLeaf.create();
+              //actually draw leaf
+              meshDrawable = meshDrawable.addMeshComponent(newLeaf);
+        }
         return meshDrawable;
 
     };

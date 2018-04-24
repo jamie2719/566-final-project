@@ -24,12 +24,17 @@ class LSystem {
         // this.grammar.set(']', new Array<ExpansionRule>(new ExpansionRule(.4, '[+F]'), new ExpansionRule(.6, '[-F]')));
         // //this.grammar.set('[', new Array<ExpansionRule>(new ExpansionRule(1, '[[RF]')));
 
-        this.grammar.set('F', new Array<ExpansionRule>(new ExpansionRule(.25, '+FL[+F>L]'), 
-                                                        new ExpansionRule(.5, '-FL[+F]'),
-                                                        new ExpansionRule(.75, '*F<L[+>>L]'),
-                                                        new ExpansionRule(1, '.FL[*FL]')));
+        // this.grammar.set('F', new Array<ExpansionRule>(new ExpansionRule(.25, '+FL[+F>L]'), 
+        //                                                 new ExpansionRule(.5, '-FL[+F]'),
+        //                                                 new ExpansionRule(.75, '*F<L[+>>L]'),
+        //                                                 new ExpansionRule(1, '.FL[*FL]')));
+
+        this.grammar.set('F', new Array<ExpansionRule>(new ExpansionRule(.25, 'F[+F][-F][*F][.F]'))); 
+                                                        //new ExpansionRule()));
 
     }
+//combinations of rotations
+//probabilities dependent on height
 
     expandSeed() {
         
@@ -57,18 +62,18 @@ class LSystem {
                         // else {
                         //     expandedHead = CharNode.stringToLinkedList(expand[i+1].expanded);
                         // }
-                        if(rand < .25) {
+                        // if(rand < .25) {
                             expandedHead = CharNode.stringToLinkedList(expand[0].expanded);
-                        }
-                        else if(rand < .5) {
-                            expandedHead = CharNode.stringToLinkedList(expand[1].expanded);
-                        }
-                        else if(rand < .75) {
-                            expandedHead = CharNode.stringToLinkedList(expand[2].expanded);
-                        }
-                        else {
-                            expandedHead = CharNode.stringToLinkedList(expand[3].expanded);
-                        }
+                        // }
+                        // else if(rand < .5) {
+                        //     expandedHead = CharNode.stringToLinkedList(expand[1].expanded);
+                        // }
+                        // else if(rand < .75) {
+                        //     expandedHead = CharNode.stringToLinkedList(expand[2].expanded);
+                        // }
+                        // else {
+                        //     expandedHead = CharNode.stringToLinkedList(expand[3].expanded);
+                        // }
                         
                     // }
                 }

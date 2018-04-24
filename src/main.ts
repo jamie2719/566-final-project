@@ -24,7 +24,8 @@ import Cloud from './geometry/Cloud'
 
 const controls = {
   Iterations: 0,
-  Axiom: "F[.F][+F][*F]",
+  //Axiom: "F[.FL][+FL][*FL]",
+  Axiom: "F",
   Reload: function() {loadScene()}
 };
 
@@ -52,6 +53,7 @@ let alpacaTex: Texture;
 let frameTex: Texture;
 let wallTex: Texture;
 let treeTex: Texture;
+let leafTex: Texture;
 
 let treeMesh : Mesh;
 let branchS: string;
@@ -80,24 +82,24 @@ function loadTrees() {
   treeMesh = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
   lsystem = new LSystem(controls.Axiom, controls.Iterations);
   lsystem.doIterations();
-  console.log(lsystem.seed);
+  //console.log(lsystem.seed);
 
   //load in default branch vertex data
   var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
-  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 4);
+  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 6);
   var trunk = new Mesh(branchS, vec3.fromValues(0, 0, 0), 4);
 
-  console.log(treeMesh);
+  //console.log(treeMesh);
   //treeMesh.addMeshComponent(trunk);
   //create first turtle
-  var currTurtle = new Turtle(vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
+  var currTurtle = new Turtle(vec3.fromValues(0, 5, 0), vec3.fromValues(0, 1, 0), mat4.create());
   //create turtle stack
   turtleParser = new TurtleParser(currTurtle);
 
   
   //set turtle stack's default branch to the branch you created
   turtleParser.defaultBranch = branchDef;
-  console.log(branchDef);
+  //console.log(branchDef);
   turtleParser.defaultLeaf = leafDef;
   treeMesh = turtleParser.renderSymbols(CharNode.stringToLinkedList(lsystem.seed), treeMesh);
   treeMesh.create();
@@ -193,6 +195,7 @@ function loadScene() {
   frameTex = new Texture('./resources/textures/wood.jpg');
   wallTex = new Texture('./resources/textures/paint.jpg');
   treeTex = new Texture('./resources/textures/tree.jpg');
+  leafTex = new Texture('./resources/textures/leaf.jpg');
 
 
 
@@ -254,6 +257,7 @@ function main() {
   standardDeferred.setupTexUnits(["tex_Color1"]);
   standardDeferred.setupTexUnits(["tex_Color2"]);
   standardDeferred.setupTexUnits(["tex_Color3"]);
+  standardDeferred.setupTexUnits(["tex_Color4"]);
 
   let shadowMat = mat4.create(); 
   let invViewProj = mat4.create();
@@ -280,6 +284,7 @@ function main() {
     standardDeferred.bindTexToUnit("tex_Color1", frameTex, 1);
     standardDeferred.bindTexToUnit("tex_Color2", wallTex, 2);
     standardDeferred.bindTexToUnit("tex_Color3", treeTex, 3);
+    standardDeferred.bindTexToUnit("tex_Color4", leafTex, 4);
 
 
     renderer.clear();
