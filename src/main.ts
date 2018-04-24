@@ -147,6 +147,7 @@ function loadScene() {
   frameTex = new Texture('../resources/textures/wood.jpg');
   wallTex = new Texture('../resources/textures/paint.jpg');
 
+
 }
 
 
