@@ -27,10 +27,6 @@ class Light {
     vec3.add(this.target, this.position, this.direction);
     mat4.lookAt(this.viewMatrix, this.eye, this.center, this.up);
 
-console.log("Center: " + this.center);
-console.log("Eye: " + this.eye);
-console.log("view mat: " + this.viewMatrix);
-
     var scale = 50.0;
     mat4.ortho(this.orthogonalMatrix, -scale, scale, -scale, scale, -scale, scale);
   }

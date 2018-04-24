@@ -12,6 +12,7 @@ in vec4 vs_Nor;
 in vec4 vs_Col;
 in vec2 vs_UV;
 in float vs_Type;
+in vec3 vs_Translate;
 
 out vec4 fs_Pos;
 out vec4 fs_Nor;            
@@ -171,7 +172,9 @@ void computeCloud() {
     vec4 offsetPos = vec4(val * vs_Nor.rgb, 0.0);
     offsetPos += vs_Pos;
 
-    fs_Col = offsetPos;//vs_Col;
+    offsetPos.xyz += vs_Translate.xyz; // translate each instance
+
+    fs_Col = vec4(1.0);
     fs_UV = vs_UV;
     fs_UV.y = 1.0 - fs_UV.y;
     fs_Type = vs_Type;

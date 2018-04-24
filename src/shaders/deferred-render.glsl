@@ -12,7 +12,6 @@ const float TWO_PI = 6.28318530718;
 uniform sampler2D u_gb0;
 uniform sampler2D u_gb1;
 uniform sampler2D u_gb2;
-uniform sampler2D u_gb3;
 uniform sampler2D shadowMapTex;
 
 uniform mat4 u_ShadowMat;
@@ -32,13 +31,6 @@ uniform vec4 u_CamPos;
 
 uniform vec4 u_LightPos;
 
-// const vec3 sky[5] = vec3[](
-//         vec3(122, 155, 165) / 255.0,
-// vec3(220, 153, 162) / 255.0,
-// vec3(254, 196, 159) / 255.0,
-// vec3(217, 235, 215) / 255.0,
-// vec3(162, 230, 249) / 255.0);
-
 const vec3 sky[5] = vec3[](
 vec3(182, 112, 50) / 255.0,
 vec3(214, 158, 81) / 255.0,
@@ -47,13 +39,6 @@ vec3(238, 202, 102) / 255.0,
 vec3(255, 242, 198) / 255.0);
 
 vec4 skyShader();
-
-float linearize(float depth) {
-	float f=1000.0;
-	float n = 0.1;
-	float z = (2.0 * n) / (f + n - depth * (f - n));
-	return z;
-}
 
 bool isVisible(float depth) {
 
@@ -92,8 +77,6 @@ void main() {
     float type = texture(u_gb2, fs_UV).w;
 	
 	vec4 meshOverlap = texture(u_gb1, fs_UV);
-
-    vec4 cloudColor = texture(u_gb3, fs_UV);
 
 	vec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
 
@@ -138,7 +121,6 @@ void main() {
     if (camDist > maxFogDist) {
         out_Col = fogColor;
     }
-    out_Col += cloudColor;
     
 }
 

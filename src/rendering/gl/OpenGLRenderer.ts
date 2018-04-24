@@ -73,7 +73,7 @@ class OpenGLRenderer {
     this.lightPos = lightPos;
 
     this.currentTime = 0.0;
-    this.gbTargets = [undefined, undefined, undefined, undefined];
+    this.gbTargets = [undefined, undefined, undefined];
     this.post8Buffers = [undefined, undefined];
     this.post8Targets = [undefined, undefined];
     this.post8Passes = [];
@@ -165,7 +165,7 @@ class OpenGLRenderer {
     // refresh the gbuffers
     this.gBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
 
     for (let i = 0; i < this.gbTargets.length; i ++) {
       this.gbTargets[i] = gl.createTexture();
@@ -315,11 +315,7 @@ class OpenGLRenderer {
     let colorL = vec4.fromValues(0.5, 0.5, 0.5, 1);
 
     mat4.identity(modelL);
-    //mat4.multiply(viewProjL, light.orthogonalMatrix, light.viewMatrix);
     shadowProg.setModelMatrix(modelL);
-    //shadowProg.setViewProjMatrix(light.viewOrhtProjMatrix);
-    //shadowProg.setGeometryColor(color);
-    //shadowProg.setViewMatrix(viewL);
     shadowProg.setViewProjOrthoMat(light.viewOrhtProjMatrix);
 
     shadowProg.setTime(this.currentTime);

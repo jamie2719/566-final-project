@@ -13,7 +13,7 @@ uniform mat4 u_View;
 uniform mat4 u_ModelInvTr;  
 
 uniform vec3 u_LightPos;
-out vec4 fragColor[4]; // The data in the ith index of this array of outputs
+out vec4 fragColor[3]; // The data in the ith index of this array of outputs
                        // is passed to the ith index of OpenGLRenderer's
                        // gbTargets array, which is an array of textures.
                        // This lets us output different types of data,
@@ -84,7 +84,6 @@ void main() {
     vec4 Nor = vec4(view * invTranspose * fs_Nor.xyz, 0);
     vec4 pos = u_View * u_Model * fs_Pos;
 
-    vec4 cloudAlpha = vec4(0.0);
     vec4 col;
     if(fs_Type == 0.0) {
         col = vec4(terrainCol(), 1.0);
@@ -94,9 +93,9 @@ void main() {
         col = texture(tex_Color1, fs_UV);
     } else if (fs_Type == 3.0) {
         col = vec4(wallCol, 1.0);
-    } else if (fs_Type == 4.0) {
+    } else if (fs_Type == 4.0) { // cloud
         float heightField = fbm(fs_Nor.brg);
-        cloudAlpha = vec4(1.0);
+        col = fs_Col;
     }
 
     // if using textures, inverse gamma correct
@@ -115,34 +114,15 @@ void main() {
     // albedo
     fragColor[2] = vec4(col.rgb, fs_Type);
 
-    // cloud transparency
-    fragColor[3] = cloudAlpha;
-
 }
 
 vec3 terrainCol() {
     vec3 diffuseColor;
-    
-    // vec3 tanGrass = vec3(248.0f / 255.0f, 205.0 / 255.0f, 80.0 / 255.0f);
-    // vec3 grass = vec3(30.f / 255.f, 120.0f / 255.0f, 0.0f);
-    // vec3 hill = vec3(90.0f / 255.0f, 67.0f / 255.0f, 0.0f);
 
      vec3 tanGrass = vec3(204.0f / 255.0f, 133.0 / 255.0f, 60.0 / 255.0f);
      vec3 grass = vec3(210.f / 255.f, 143.0f / 255.0f, 63.0f / 255.0);
      vec3 hill = vec3(242.0f / 255.0f, 179.0f / 255.0f, 111.0f / 255.0);
-/*
-    if(offset > .2) { 
-        diffuseColor = hill + vec3(landNoise * .57, 0.0, 0.0); // mountain
-    }
-    else if(offset > -.3f) {
-        diffuseColor = mix(tanGrass + vec3(landNoise*.4, landNoise*.4, landNoise*.4), grass + vec3(0.0, landNoise, 0.0), 1.f -offset); //sand
-        
-    }
-    else { 
-        diffuseColor = mix(tanGrass + vec3(landNoise*.4, landNoise*.4, landNoise*.4), grass + vec3(0.0, landNoise, 0.0), -1.f*offset); //sand
-    }
 
-    */
     diffuseColor = hill + vec3(landNoise * .57, 0.0, 0.0); // mountain
     
     return diffuseColor;

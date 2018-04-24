@@ -9,11 +9,12 @@ import Cube from './geometry/Cube';
 import Mesh from './geometry/Mesh';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
-import Light from './LIght';
+import Light from './Light';
 import {setGL} from './globals';
 import {readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture from './rendering/gl/Texture';
+import Cloud from './geometry/Cloud'
 
 // Define an object with application parameters and button callbacks
 // const controls = {
@@ -30,6 +31,8 @@ let alpaca: Mesh;
 let cloudS: string;
 let cloud: Mesh;
 
+let clouds: Cloud;
+
 let frameS: string;
 let frame: Mesh;
 
@@ -41,8 +44,6 @@ let wahoo: Mesh;
 
 let groundS: string;
 let ground: Mesh;
-
-// let ground: Cube;
 
 let alpacaTex: Texture;
 let frameTex: Texture;
@@ -114,8 +115,6 @@ function loadScene() {
   wall && wall.destroy();
   cloud && cloud.destroy();
 
-
-
   //setup ground plane
   ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
   ground.create();
@@ -131,6 +130,18 @@ function loadScene() {
 
   cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), 4);
   cloud.create();
+
+  
+  clouds = new Cloud();
+  clouds.setData();
+
+
+  let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+  let colors: Float32Array = new Float32Array(clouds.getColors());
+  cloud.setInstanceVBOs(offsets, colors);
+  let n = clouds.getNumParticles();
+  cloud.setNumInstances(n * n);
+
 
   alpacaTex = new Texture('../resources/textures/alpaca.jpg');
   frameTex = new Texture('../resources/textures/wood.jpg');
@@ -223,7 +234,6 @@ function main() {
     // forward render mesh info into gbuffers
 
     renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, wall, cloud]);
-    //renderer.renderToGBuffer(camera, light, standardTerrain, shadowDeferred, [ground]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
