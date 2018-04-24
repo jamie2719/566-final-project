@@ -49,7 +49,7 @@ class TurtleParser {
     }
 
     createBranch(center: vec3) {
-        var newBranch = new Mesh(this.branchS, center, 2);
+        var newBranch = new Mesh(this.branchS, center, 5);
         // newBranch.positions = new Float32Array(this.defaultBranch.positions);
         // newBranch.normals = new Float32Array(this.defaultBranch.normals);
         // newBranch.indices = new Uint32Array(this.defaultBranch.indices);
@@ -58,7 +58,7 @@ class TurtleParser {
     }
 
     createLeaf(center: vec3) {
-        var newLeaf = new Mesh(this.leafS, center, 3);
+        var newLeaf = new Mesh(this.leafS, center, 5);
         // newLeaf.positions = new Float32Array(this.defaultLeaf.positions);
         // newLeaf.normals = new Float32Array(this.defaultLeaf.normals);
         // newLeaf.indices = new Uint32Array(this.defaultLeaf.indices);
@@ -174,12 +174,12 @@ class TurtleParser {
                 Turtle.linkTurtles(this.currTurtle, temp);
             }
 
-            this.turtleHead = new Turtle(this.currTurtle.currPos); 
+            this.turtleHead = new Turtle(this.currTurtle.currPos, this.currTurtle.currDir); 
         }
         else if(symbolNode.char == ']') {
             //pop off head of stack and set curr to that
             if(this.turtleHead != null) {
-                var temp = new Turtle(this.turtleHead.currPos);
+                var temp = new Turtle(this.turtleHead.currPos, this.turtleHead.currDir);
                 this.currTurtle = temp;
                 this.turtleHead = this.turtleHead.next;
             }

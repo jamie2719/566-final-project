@@ -117,7 +117,17 @@ void computeGround() {
         val = trilinearInterpolation(pos);
         vec3 random = random3(vs_Pos.rgb);
         if(val > 0.f) {
-           summedNoise += val * amplitude * 10.f;
+            if(vs_Pos.z < -600.f) {
+                summedNoise += val * amplitude * 80.f;
+            }
+            else if(vs_Pos.z < -400.f) {
+                summedNoise += val * amplitude * 50.f;
+            }
+            
+            else {
+                 summedNoise += val * amplitude * 10.f;
+        
+            }
         }
         summedNoise += val * amplitude;
         amplitude *= .3;

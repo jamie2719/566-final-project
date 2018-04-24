@@ -51,6 +51,7 @@ let ground: Mesh;
 let alpacaTex: Texture;
 let frameTex: Texture;
 let wallTex: Texture;
+let treeTex: Texture;
 
 let treeMesh : Mesh;
 let branchS: string;
@@ -76,20 +77,20 @@ var timer = {
 }
 
 function loadTrees() {
-  treeMesh = new Mesh(branchS, vec3.fromValues(0, 0, 0), 1);
+  treeMesh = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
   lsystem = new LSystem(controls.Axiom, controls.Iterations);
   lsystem.doIterations();
   console.log(lsystem.seed);
 
   //load in default branch vertex data
-  var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
-  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 3);
-  var trunk = new Mesh(branchS, vec3.fromValues(0, 0, 0), 2);
+  var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
+  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 4);
+  var trunk = new Mesh(branchS, vec3.fromValues(0, 0, 0), 4);
 
   console.log(treeMesh);
   //treeMesh.addMeshComponent(trunk);
   //create first turtle
-  var currTurtle = new Turtle(vec3.fromValues(0, 0, 0));
+  var currTurtle = new Turtle(vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
   //create turtle stack
   turtleParser = new TurtleParser(currTurtle);
 
@@ -105,7 +106,6 @@ function loadTrees() {
 function loadOBJText() {
  
   alpacaS = readTextFile('./resources/obj/alpaca.obj');
-  // wahooS = readTextFile('./resources/obj/wahoo.obj');
   groundS = readTextFile('./resources/obj/ground.obj');
 
   branchS = readTextFile('./resources/obj/branch1OBJ.obj');
@@ -192,6 +192,7 @@ function loadScene() {
   alpacaTex = new Texture('./resources/textures/alpaca.jpg');
   frameTex = new Texture('./resources/textures/wood.jpg');
   wallTex = new Texture('./resources/textures/paint.jpg');
+  treeTex = new Texture('./resources/textures/tree.jpg');
 
 
 
@@ -252,6 +253,7 @@ function main() {
   standardDeferred.setupTexUnits(["tex_Color0"]);
   standardDeferred.setupTexUnits(["tex_Color1"]);
   standardDeferred.setupTexUnits(["tex_Color2"]);
+  standardDeferred.setupTexUnits(["tex_Color3"]);
 
   let shadowMat = mat4.create(); 
   let invViewProj = mat4.create();
@@ -277,6 +279,7 @@ function main() {
     standardDeferred.bindTexToUnit("tex_Color0", alpacaTex, 0);
     standardDeferred.bindTexToUnit("tex_Color1", frameTex, 1);
     standardDeferred.bindTexToUnit("tex_Color2", wallTex, 2);
+    standardDeferred.bindTexToUnit("tex_Color3", treeTex, 3);
 
 
     renderer.clear();

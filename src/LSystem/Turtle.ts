@@ -14,12 +14,12 @@ class Turtle {
     next: Turtle;
     prev: Turtle;
  
-    constructor(pos : vec3) {
+    constructor(pos : vec3, dir: vec3) {
         this.currPos = vec3.create();
         vec3.set(this.currPos, pos[0], pos[1], pos[2]);
         this.currDir = vec3.create();
-        this.currDir = vec3.fromValues(0, 1, 0);
-
+        //this.currDir = vec3.fromValues(0, 1, 0);
+        vec3.set(this.currDir, dir[0], dir[1], dir[2]);
         this.rotMat = mat4.create();
     }
 
