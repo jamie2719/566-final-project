@@ -24,7 +24,7 @@ if(abs(type - .2) < epsilon || abs(type - .3) < epsilon) {
 
 // paint filter
 
-    int radius = 8;
+    int radius = 5;
     vec2 uv = fs_UV;
     
     // kuwahara filter for painterly effect
