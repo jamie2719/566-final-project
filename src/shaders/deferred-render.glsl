@@ -97,8 +97,11 @@ void main() {
 		return;
 	}
     // 1 corresponds to frame/wall? 
-    bool isWall = abs(type - .2) > .002;
-	if(!(isVisible(fs_Nor.w))) {
+    bool isWall = false;
+    if(abs(type - .3) < .01) {
+        isWall = true;
+    }
+	if(!(isVisible(fs_Nor.w)) && !isWall) {
 		out_Col = diffuseColor * 0.5;  
 	} else {
 		out_Col = vec4(diffuseColor.xyz, 1.0);
@@ -125,7 +128,6 @@ void main() {
     if (camDist > maxFogDist) {
         out_Col = fogColor;
     }
-
     
 }
 

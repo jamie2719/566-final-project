@@ -14,16 +14,20 @@ import {setGL} from './globals';
 import {readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture from './rendering/gl/Texture';
+
+import LSystem from './LSystem/LSystem';
+import TurtleParser from './LSystem/TurtleParser';
+import Turtle from './LSystem/Turtle';
+import CharNode from './LSystem/CharNode';
+
 import Cloud from './geometry/Cloud'
 
-// Define an object with application parameters and button callbacks
-// const controls = {
-//   // Extra credit: Add interactivity
-// };
-
-//let groundPlane: Cube;
-
-// TODO: replace with your scene's stuff
+const controls = {
+  Iterations: 0,
+  //Axiom: "F[.FL][+FL][*FL]",
+  Axiom: "F",
+  Reload: function() {loadScene()}
+};
 
 let alpacaS: string;
 let alpaca: Mesh;
@@ -48,6 +52,18 @@ let ground: Mesh;
 let alpacaTex: Texture;
 let frameTex: Texture;
 let wallTex: Texture;
+let treeTex: Texture;
+let leafTex: Texture;
+
+let treeMesh : Mesh;
+let branchS: string;
+let leafS: string;
+let lsystem: LSystem;
+let turtleParser: TurtleParser;
+//original obj data for branches
+let indicesB: Uint32Array; 
+let positionsB: Float32Array;
+let normalsB: Float32Array;
 
 
 var timer = {
@@ -62,13 +78,45 @@ var timer = {
   },
 }
 
+function loadTrees() {
+  treeMesh = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
+  lsystem = new LSystem(controls.Axiom, controls.Iterations);
+  lsystem.doIterations();
+  //console.log(lsystem.seed);
+
+  //load in default branch vertex data
+  var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
+  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 6);
+  var trunk = new Mesh(branchS, vec3.fromValues(0, 0, 0), 4);
+
+  //console.log(treeMesh);
+  //treeMesh.addMeshComponent(trunk);
+  //create first turtle
+  var currTurtle = new Turtle(vec3.fromValues(0, 5, 0), vec3.fromValues(0, 1, 0), mat4.create());
+  //create turtle stack
+  turtleParser = new TurtleParser(currTurtle);
+
+  
+  //set turtle stack's default branch to the branch you created
+  turtleParser.defaultBranch = branchDef;
+  //console.log(branchDef);
+  turtleParser.defaultLeaf = leafDef;
+  treeMesh = turtleParser.renderSymbols(CharNode.stringToLinkedList(lsystem.seed), treeMesh);
+  treeMesh.create();
+}
 
 function loadOBJText() {
-  frameS = readTextFile('../resources/obj/frame.obj')
-  alpacaS = readTextFile('../resources/obj/alpaca.obj')
-  groundS = readTextFile('../resources/obj/ground.obj')
-  wallS = readTextFile('../resources/obj/wall.obj')
-  cloudS = readTextFile('../resources/obj/cloud.obj')
+ 
+  alpacaS = readTextFile('./resources/obj/alpaca.obj');
+  groundS = readTextFile('./resources/obj/ground.obj');
+
+  branchS = readTextFile('./resources/obj/branch1OBJ.obj');
+  leafS = readTextFile('./resources/obj/leaf.obj');
+
+  frameS = readTextFile('./resources/obj/frame.obj');
+  
+  wallS = readTextFile('./resources/obj/wall.obj');
+  cloudS = readTextFile('./resources/obj/cloud.obj');
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -143,10 +191,15 @@ function loadScene() {
   cloud.setNumInstances(n * n);
 
 
-  alpacaTex = new Texture('../resources/textures/alpaca.jpg');
-  frameTex = new Texture('../resources/textures/wood.jpg');
-  wallTex = new Texture('../resources/textures/paint.jpg');
+  alpacaTex = new Texture('./resources/textures/alpaca.jpg');
+  frameTex = new Texture('./resources/textures/wood.jpg');
+  wallTex = new Texture('./resources/textures/paint.jpg');
+  treeTex = new Texture('./resources/textures/tree.jpg');
+  leafTex = new Texture('./resources/textures/leaf.jpg');
 
+
+
+  loadTrees();  
 
 }
 
@@ -160,8 +213,10 @@ function main() {
   stats.domElement.style.top = '0px';
   document.body.appendChild(stats.domElement);
 
-  // Add controls to the gui
-  // const gui = new DAT.GUI();
+  const gui = new DAT.GUI();
+  gui.add(controls, 'Iterations', 0, 10).step(1);
+  gui.add(controls, 'Axiom');
+  gui.add(controls, 'Reload');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -213,6 +268,8 @@ function main() {
   standardDeferred.setupTexUnits(["tex_Color0"]);
   standardDeferred.setupTexUnits(["tex_Color1"]);
   standardDeferred.setupTexUnits(["tex_Color2"]);
+  standardDeferred.setupTexUnits(["tex_Color3"]);
+  standardDeferred.setupTexUnits(["tex_Color4"]);
 
   let shadowMat = mat4.create(); 
   let invViewProj = mat4.create();
@@ -247,6 +304,8 @@ function main() {
     standardDeferred.bindTexToUnit("tex_Color0", alpacaTex, 0);
     standardDeferred.bindTexToUnit("tex_Color1", frameTex, 1);
     standardDeferred.bindTexToUnit("tex_Color2", wallTex, 2);
+    standardDeferred.bindTexToUnit("tex_Color3", treeTex, 3);
+    standardDeferred.bindTexToUnit("tex_Color4", leafTex, 4);
 
 
     renderer.clear();
@@ -255,9 +314,9 @@ function main() {
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
 
-    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, wall, cloud]);
-    renderer.renderCloudsToGBuffer(camera, cloudDeferred, [cloud]);
-    // render from gbuffers into 32-bit color buffer
+
+    renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, treeMesh, wall, cloud]);
+// render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
     renderer.renderPostProcessHDR();
