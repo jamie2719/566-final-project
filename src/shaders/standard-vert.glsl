@@ -135,11 +135,11 @@ void computeGround() {
 
     val =  summedNoise * .6;
     vec4 offsetPos = vec4(val * vs_Pos.rgb, 0.0);
-    offset = val * vs_Pos.y;
+    offset = val;// * vs_Pos.y;
 
 
     // water noise calculation
-    vec3 waterPos = vec3(vs_Pos) * 16.f * (2.f)/4.0;
+    vec3 waterPos = vec3(200.f*vs_Pos) * 16.f * (2.f)/4.0;
     landNoise = trilinearInterpolation(waterPos) *1.5f;
 
     fs_Col = offsetPos;//vs_Col;

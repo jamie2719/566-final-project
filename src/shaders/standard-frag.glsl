@@ -126,10 +126,26 @@ vec3 terrainCol() {
     vec3 diffuseColor;
 
      vec3 tanGrass = vec3(204.0f / 255.0f, 133.0 / 255.0f, 60.0 / 255.0f);
-     vec3 grass = vec3(210.f / 255.f, 143.0f / 255.0f, 63.0f / 255.0);
-     vec3 hill = vec3(242.0f / 255.0f, 179.0f / 255.0f, 111.0f / 255.0);
+     vec3 grass = vec3(100.f / 255.f, 180.0f / 255.0f, 23.0f / 255.0);
+     vec3 hill = vec3(180.0f / 255.0f, 179.0f / 255.0f, 200.0f / 255.0);
+     vec3 mountain = vec3(80.0f / 255.0f, 190.0f / 255.0f, 200.0f / 255.0);
 
-    diffuseColor = hill + vec3(landNoise * .57, 0.0, 0.0); // mountain
+
+    if(offset > 7.f) { //background mountains and hills
+        diffuseColor = mountain + vec3(0.0, landNoise*.3, landNoise*.8); // mountain
+    }
+    else if(offset > 4.f) { //background mountains and hills
+        diffuseColor = hill + vec3(0.0, landNoise*.3, landNoise*.8); // mountain
+    }
+    else if(offset > 1.f) {
+        diffuseColor = mix(tanGrass * 1.5f + vec3(landNoise*2.f, landNoise, 0.0f), .1 *grass, offset*.1); //grass 
+        
+    }
+    else if(offset > -1.f){ 
+        diffuseColor = grass + vec3(landNoise*2.f, landNoise*.7, 0.f);//mix(tanGrass + vec3(0.f, landNoise*.4, 0.f), grass + vec3(0.0, landNoise, 0.0f), -1.f*offset); //sand
+    }
+    
+    //diffuseColor = hill + vec3(landNoise * .57, 0.0, 0.0); // mountain
     
     return diffuseColor;
 }
