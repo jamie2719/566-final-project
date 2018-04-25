@@ -158,7 +158,8 @@ void computeCloud() {
     float amplitude = 5.f;//u_mountainHeight;
     float val;
     for(int i = 2; i <= 2048; i *= 2) {
-        vec3 pos = vec3(vs_Pos) * .02000f  * float(i);
+        // vs_translate is cool affect for other projects
+        vec3 pos = vec3(vs_Pos.xyz + vs_Translate.xyz * .2) * .02000f  * float(i);
         val = trilinearInterpolation(pos);
         vec3 random = random3(vs_Pos.rgb);
         if(val > 0.f) {

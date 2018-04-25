@@ -38,6 +38,8 @@ vec3(254, 196, 159) / 255.0,
 vec3(238, 202, 102) / 255.0,
 vec3(255, 242, 198) / 255.0);
 
+vec3 wallCol = vec3(178.0, 199.0, 232.0) / 255.0;
+
 vec4 skyShader();
 
 bool isVisible(float depth) {
@@ -282,6 +284,8 @@ vec4 skyShader() {
 	}
 
 	vec3 outColor = mix(distortedSkyHue, cloudColor, heightField * 0.75);
-	
+	if(rayDir.z > 0.099) {
+        outColor = wallCol;
+    }
 	return vec4(outColor, 1);
 }

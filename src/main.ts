@@ -180,7 +180,14 @@ function main() {
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
-
+  
+  clouds.update(timer.currentTime);
+  clouds.setData();
+  let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+  let colors: Float32Array = new Float32Array(clouds.getColors());
+  cloud.setInstanceVBOs(offsets, colors);
+  let n = clouds.getNumParticles();
+  cloud.setNumInstances(n * n);
 
   const renderer = new OpenGLRenderer(canvas, vec4.fromValues(light.position[0], light.position[1], light.position[2], 1));
   renderer.setClearColor(0, 0, 0, 1);
@@ -214,6 +221,14 @@ function main() {
 
   function tick() {
     camera.update();
+
+    clouds.update(timer.currentTime);
+    clouds.setData();
+    let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+    let colors: Float32Array = new Float32Array(clouds.getColors());
+    cloud.setInstanceVBOs(offsets, colors);
+    let n = clouds.getNumParticles();
+    cloud.setNumInstances(n * n);
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
