@@ -23,8 +23,7 @@ import CharNode from './LSystem/CharNode';
 import Cloud from './geometry/Cloud'
 
 const controls = {
-  Iterations: 0,
-  //Axiom: "F[.FL][+FL][*FL]",
+  Iterations: 2,
   Axiom: "F",
   Reload: function() {loadScene()}
 };
@@ -214,7 +213,7 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   const gui = new DAT.GUI();
-  gui.add(controls, 'Iterations', 0, 10).step(1);
+  gui.add(controls, 'Iterations', 0, 4).step(1);
   gui.add(controls, 'Axiom');
   gui.add(controls, 'Reload');
 
