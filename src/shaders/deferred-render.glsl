@@ -12,6 +12,7 @@ const float TWO_PI = 6.28318530718;
 uniform sampler2D u_gb0;
 uniform sampler2D u_gb1;
 uniform sampler2D u_gb2;
+uniform sampler2D cloudTex;
 uniform sampler2D shadowMapTex;
 
 uniform mat4 u_ShadowMat;
@@ -37,6 +38,8 @@ vec3(214, 158, 81) / 255.0,
 vec3(254, 196, 159) / 255.0,
 vec3(238, 202, 102) / 255.0,
 vec3(255, 242, 198) / 255.0);
+
+vec3 wallCol = vec3(178.0, 199.0, 232.0) / 255.0;
 
 vec4 skyShader();
 
@@ -94,7 +97,11 @@ void main() {
 		return;
 	}
     // 1 corresponds to frame/wall? 
-	if(!isVisible(fs_Nor.w) && type != 1.0 && type != 2.0) {
+    bool isWall = false;
+    if(abs(type - .3) < .01) {
+        isWall = true;
+    }
+	if(!(isVisible(fs_Nor.w)) && !isWall) {
 		out_Col = diffuseColor * 0.5;  
 	} else {
 		out_Col = vec4(diffuseColor.xyz, 1.0);
@@ -282,6 +289,8 @@ vec4 skyShader() {
 	}
 
 	vec3 outColor = mix(distortedSkyHue, cloudColor, heightField * 0.75);
-	
+	if(rayDir.z > 0.099) {
+        outColor = wallCol;
+    }
 	return vec4(outColor, 1);
 }

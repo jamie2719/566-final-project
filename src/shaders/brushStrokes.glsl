@@ -13,47 +13,15 @@ uniform sampler2D u_typeTex;
 
 // Interpolation between color and greyscale over time on left half of screen
 void main() {
-    /*
-	mat3 horizontal = mat3(vec3(3.0, 10.0, 3.0), vec3(0.0, 0.0, 0.0), vec3(-3.0, -10.0, -3.0));
-    mat3 vertical = mat3(vec3(3.0, 0.0, -3.0), vec3(10.0, 0.0, -10.0), vec3(3.0, 0.0, -3.0));
-    float hGradientR = 0.0;
-    float vGradientR = 0.0;
-    float hGradientG = 0.0;
-    float vGradientG = 0.0;
-    float hGradientB = 0.0;
-    float vGradientB = 0.0;
 
-    vec3 col = vec3(0.0);
-    for(int i = -1; i <= 1; i++) {      //column value
-        for(int j = -1; j <= 1; j++) {  //row value
-            float x = float((fs_UV.x * u_Dimensions.x) + float(i)) / u_Dimensions.x;
-            float y = float((fs_UV.y * u_Dimensions.y) + float(j)) / u_Dimensions.y;
-            if((x >= 0.0 && x <= 1.0) && (y >= 0.0 && y <= 1.0)) {
-                col = (vec3(texture(u_frame, vec2(x, y))));
-                int m1 = i + 1;
-                int m2 = j + 1;
-                hGradientR += col.x * horizontal[m1][m2];
-                vGradientR += col.x * vertical[m1][m2];
-                hGradientG += col.y * horizontal[m1][m2];
-                vGradientG += col.y * vertical[m1][m2];
-                hGradientB += col.z * horizontal[m1][m2];
-                vGradientB += col.z * vertical[m1][m2];
-            }
-        }
-    }
-    vec3 oldColor = vec3(texture(u_frame, fs_UV));
-    float r = sqrt(pow(vGradientR, 2.0) + pow(hGradientR, 2.0));
-    float g = sqrt(pow(vGradientG, 2.0) + pow(hGradientG, 2.0));
-    float b = sqrt(pow(vGradientB, 2.0) + pow(hGradientB, 2.0));
-	col = vec3(r, g, b);
-	float l = .1 - (0.21 * r + 0.72 * g + 0.07 * b);
-    */
-
+float epsilon = .01;
 float type = texture(u_typeTex, fs_UV).w;
-if(type == 1.0) { //don't apply to frame
+
+if(abs(type - .2) < epsilon || abs(type - .3) < epsilon) {
     out_Col = texture(u_frame, fs_UV);
     return;
 }
+
 // paint filter
 
     int radius = 8;
@@ -114,42 +82,4 @@ if(type == 1.0) { //don't apply to frame
             out_Col = vec4(m[k], 1.0);
         }
     }
-    /*
-
-//http://supercomputingblog.com/graphics/oil-painting-algorithm/
-    float intensityLevels = 10.0;
-    int radius = 2;
-    float maxCount = -1.0;
-    int maxIndex = -1;
-    float intensityCount[10];
-    float avgR[10];
-    float avgG[10];
-    float avgB[10];
-
-    for(int i = -radius / 2; i <= radius / 2; i++) {      //column value
-        for(int j = -radius / 2; j <= radius / 2; j++) {  //row value
-            float x = float((fs_UV.x * u_Dimensions.x) + float(i)) / u_Dimensions.x;
-            float y = float((fs_UV.y * u_Dimensions.y) + float(j)) / u_Dimensions.y;
-            if((x >= 0.0 && x <= 1.0) && (y >= 0.0 && y <= 1.0)) {
-                vec3 col = (vec3(texture(u_frame, vec2(x, y))));
-                int currIntensity = int(((col.x + col.y + col.z) / 3.0) * intensityLevels / 255.0);
-                intensityCount[currIntensity]++;
-                avgR[currIntensity] += col.r;
-                avgG[currIntensity] += col.g;
-                avgB[currIntensity] += col.b;
-
-                if(intensityCount[currIntensity] > maxCount) {
-                    maxCount = intensityCount[currIntensity];
-                    maxIndex = int(currIntensity);
-                }
-            }
-        }
-    }
-
-    float r = avgR[maxIndex] / maxCount;
-    float g = avgG[maxIndex] / maxCount;
-    float b = avgB[maxIndex] / maxCount;
-
-    out_Col = vec4(r, g, b, 1.0);
-*/
 }

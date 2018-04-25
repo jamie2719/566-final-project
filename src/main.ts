@@ -59,6 +59,7 @@ let treeMesh2 : Mesh;
 let treeMesh3 : Mesh;
 let treeMesh4 : Mesh;
 let branchS: string;
+let trunkS: string;
 let leafS: string;
 let lsystem: LSystem;
 let turtleParser: TurtleParser;
@@ -94,11 +95,11 @@ function loadTrees(treeMesh: Mesh) {
   //console.log(lsystem.seed);
 
   //load in default branch vertex data
-  var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
-  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), 6);
-  var trunk = new Mesh(branchS, vec3.fromValues(0, 0, 0), 4);
+  var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), .5);
+  var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), .6);
+  var trunk = new Mesh(trunkS, vec3.fromValues(treeMesh.center[0], treeMesh.center[1], treeMesh.center[2]), .5);
 
-  //treeMesh.addMeshComponent(trunk);
+  treeMesh.addMeshComponent(trunk);
   //create first turtle
   var currTurtle = new Turtle(vec3.fromValues(treeMesh.center[0], treeMesh.center[1], treeMesh.center[2]), vec3.fromValues(0, 1, 0), mat4.create());
   //create turtle stack
@@ -115,16 +116,17 @@ function loadTrees(treeMesh: Mesh) {
 
 function loadOBJText() {
  
-  alpacaS = readTextFile('./resources/obj/alpaca.obj');
-  groundS = readTextFile('./resources/obj/ground.obj');
+  alpacaS = readTextFile('./src/resources/obj/alpaca.obj');
+  groundS = readTextFile('./src/resources/obj/ground.obj');
 
-  branchS = readTextFile('./resources/obj/branch1OBJ.obj');
-  leafS = readTextFile('./resources/obj/leaf.obj');
+  branchS = readTextFile('./src/resources/obj/branch1OBJ.obj');
+  leafS = readTextFile('./src/resources/obj/leaf.obj');
+  trunkS = readTextFile('./src/resources/obj/trunk.obj');
 
-  frameS = readTextFile('./resources/obj/frame.obj');
+  frameS = readTextFile('./src/resources/obj/frame.obj');
   
-  wallS = readTextFile('./resources/obj/wall.obj');
-  cloudS = readTextFile('./resources/obj/cloud.obj');
+  wallS = readTextFile('./src/resources/obj/wall.obj');
+  cloudS = readTextFile('./src/resources/obj/cloud.obj');
 }
 
 function VBOtoVec4(arr: Float32Array) {
@@ -175,16 +177,16 @@ function loadScene() {
   ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
   ground.create();
 
-  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), 1);
+  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), .1);
   alpaca.create();
 
-  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), 2);
+  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), .2);
   frame.create();
 
-  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), 3);
+  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), .3);
   wall.create();
 
-  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), 4);
+  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), .4);
   cloud.create();
 
   
@@ -199,11 +201,11 @@ function loadScene() {
   cloud.setNumInstances(n * n);
 
 
-  alpacaTex = new Texture('./resources/textures/alpaca.jpg');
-  frameTex = new Texture('./resources/textures/wood.jpg');
-  wallTex = new Texture('./resources/textures/paint.jpg');
-  treeTex = new Texture('./resources/textures/tree.jpg');
-  leafTex = new Texture('./resources/textures/leaf.jpg');
+  alpacaTex = new Texture('./src/resources/textures/alpaca.jpg');
+  frameTex = new Texture('./src/resources/textures/wood.jpg');
+  wallTex = new Texture('./src/resources/textures/paint.jpg');
+  treeTex = new Texture('./src/resources/textures/tree.jpg');
+  leafTex = new Texture('./src/resources/textures/leaf.jpg');
 
   //generate random tree positions
   var posX1 = (Math.random() * 2.0 - 1.0) * 600.0;
@@ -230,13 +232,13 @@ function loadScene() {
   else {
     posZ3 *= -370.0;
   }
-  treeMesh1 = new Mesh(branchS, vec3.fromValues(0, 0, 0), 5);
+  treeMesh1 = new Mesh(branchS, vec3.fromValues(0, 0, 0), .5);
   loadTrees(treeMesh1);
-  treeMesh2 = new Mesh(branchS, vec3.fromValues(posX1, 0, posZ1), 5);
+  treeMesh2 = new Mesh(branchS, vec3.fromValues(posX1, 0, posZ1), .5);
   loadTrees(treeMesh2);
-  treeMesh3 = new Mesh(branchS, vec3.fromValues(posX2, 0, posZ2), 5);
+  treeMesh3 = new Mesh(branchS, vec3.fromValues(posX2, 0, posZ2), .5);
   loadTrees(treeMesh3);
-  treeMesh4 = new Mesh(branchS, vec3.fromValues(posX3, 0, posZ3), 5);
+  treeMesh4 = new Mesh(branchS, vec3.fromValues(posX3, 0, posZ3), .5);
   loadTrees(treeMesh4);
   
 
@@ -276,7 +278,14 @@ function main() {
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
-
+  
+  clouds.update(timer.currentTime);
+  clouds.setData();
+  let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+  let colors: Float32Array = new Float32Array(clouds.getColors());
+  cloud.setInstanceVBOs(offsets, colors);
+  let n = clouds.getNumParticles();
+  cloud.setNumInstances(n * n);
 
   const renderer = new OpenGLRenderer(canvas, vec4.fromValues(light.position[0], light.position[1], light.position[2], 1));
   renderer.setClearColor(0, 0, 0, 1);
@@ -292,6 +301,11 @@ function main() {
       new Shader(gl.VERTEX_SHADER, require('./shaders/shadow-vert.glsl')),
       new Shader(gl.FRAGMENT_SHADER, require('./shaders/shadow-frag.glsl')),
       ]);
+
+      const cloudDeferred = new ShaderProgram([
+        new Shader(gl.VERTEX_SHADER, require('./shaders/cloud-vert.glsl')),
+        new Shader(gl.FRAGMENT_SHADER, require('./shaders/cloud-frag.glsl')),
+        ]);
 
 
   standardDeferred.setupTexUnits(["tex_Color0"]);
@@ -312,6 +326,15 @@ function main() {
 
   function tick() {
     camera.update();
+
+
+    clouds.update(timer.currentTime);
+    clouds.setData();
+    let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+    let colors: Float32Array = new Float32Array(clouds.getColors());
+    cloud.setInstanceVBOs(offsets, colors);
+    let n = clouds.getNumParticles();
+    cloud.setNumInstances(n * n);
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);

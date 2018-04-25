@@ -91,7 +91,7 @@ class Mesh extends Drawable {
       this.indices.set(tempI);
       var j = tempI.length;
       for(var i = 0; i < m.indices.length; i++) {
-        this.indices[j] = m.indices[i] + tempP.length/4;
+        this.indices[j] = m.indices[i] + tempI.length/4;
         j++;
       }
     }

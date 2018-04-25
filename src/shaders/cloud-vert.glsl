@@ -20,15 +20,6 @@ out vec4 fs_Col;
 out vec2 fs_UV;
 out float fs_Type;
 
-// terrain variables
-out float offset;
-out float landNoise;
-
-void computeGround();
-void computeCloud();
-
-
-
 // Return a random direction in a circle
 vec3 random3(vec3 p) {
     return normalize(2.0f * fract(sin(vec3(dot(p,vec3(127.1,311.7, 217.4)),
@@ -47,8 +38,6 @@ float perlin(vec3 p, vec3 gridPoint) {
     return dot(toP, gradient);
 }
 
-// takes in a position p, calculates the 8 grid points surrounding that position, calculates the 3D Perlin noise
-// value at each of the 8 grid points, and uses trilinear interpolation to find the final Perlin noise value for p
 float trilinearInterpolation(vec3 pos) {
     float tx = smoothstep(0.0, 1.0, fract(pos.x));
     float ty = smoothstep(0.0, 1.0, fract(pos.y));
@@ -85,86 +74,8 @@ float trilinearInterpolation(vec3 pos) {
     return top * (ty) + bottom * (1.0f - ty);
 }
 
-void main()
-{
-    if(vs_Type == 0.0) {
-        computeGround();
-        return;
-    } else if (abs(vs_Type - .4) < .001) {
-        computeCloud();
-        return;
-    }
-    fs_Type = vs_Type;
-    fs_Col = vs_Col;
-    fs_UV = vs_UV;
-
-    fs_UV.y = 1.0 - fs_UV.y;
-    
-    fs_Nor = vs_Nor;
-    fs_Pos = vs_Pos; // position in worldspace
-    
-    gl_Position = u_Proj * u_View * u_Model * vs_Pos;
-
-}
-
-void computeGround() {
-    // terrain noise calculation
-    float summedNoise = 0.0;
-    float amplitude = 3.f;//u_mountainHeight;
-    float val;
-    for(int i = 2; i <= 2048; i *= 2) {
-        vec3 pos = vec3(vs_Pos) * .02000f  * float(i);
-        val = trilinearInterpolation(pos);
-        vec3 random = random3(vs_Pos.rgb);
-        if(val > 0.f) {
-            //tallest mountains
-            if(vs_Pos.z < -600.f) {
-                summedNoise += val * amplitude * 90.f;
-            }
-            //less tall mountains
-            else if(vs_Pos.z < -400.f) {
-                summedNoise += val * amplitude * 50.f;
-            }
-            //scale base terrain
-            else {
-                 summedNoise += val * amplitude * 10.f;
-        
-            }
-        }
-        summedNoise += val * amplitude;
-        amplitude *= .3;
-    }
-
-    val =  summedNoise * .6;
-    vec4 offsetPos = vec4(val * vs_Pos.rgb, 0.0);
-    offset = val;// * vs_Pos.y;
-
-
-    // water noise calculation
-    vec3 waterPos = vec3(200.f*vs_Pos) * 16.f * (2.f)/4.0;
-    landNoise = trilinearInterpolation(waterPos) *1.5f;
-
-    fs_Col = offsetPos;//vs_Col;
-    fs_UV = vs_UV;
-    fs_UV.y = 1.0 - fs_UV.y;
-    fs_Type = vs_Type;
-
-    // fragment info is in view space
-    mat3 invTranspose = mat3(u_ModelInvTr);
-    mat3 view = mat3(u_View);
-    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);
-    
-    
-    vec4 modelposition;
-    modelposition = u_Model * (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
-
-    //fs_Pos = (vs_Pos + vec4(0.0, val + vs_Pos.y, 0.0, 0.0));
-    fs_Pos = vs_Pos;
-    gl_Position = u_Proj * u_View * modelposition; 
-}
-
 // deform an ellipsoid to get a lumpy kind of cloud
-void computeCloud() {
+void main() {
     // terrain noise calculation
     float summedNoise = 0.0;
     float amplitude = 5.f;//u_mountainHeight;

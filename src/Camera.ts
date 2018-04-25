@@ -24,7 +24,7 @@ class Camera {
       eye: position,
       center: target,
     });
-    this.controls.mode = 'turntable';
+    this.controls.mode = 'orbit';
     vec3.add(this.target, this.position, this.direction);
     mat4.lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
     var scale = 20.0;
