@@ -198,7 +198,7 @@ function loadScene() {
   cloud.setNumInstances(n * n);
 
 
-  alpacaTex = new Texture('./src/resources/textures/alpaca.jpg');
+  alpacaTex = new Texture('./resources/textures/alpaca.jpg');
   frameTex = new Texture('./src/resources/textures/wood.jpg');
   wallTex = new Texture('./src/resources/textures/paint.jpg');
   treeTex = new Texture('./src/resources/textures/tree.jpg');
