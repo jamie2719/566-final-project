@@ -16,6 +16,7 @@ void main() {
 
 float epsilon = .01;
 float type = texture(u_typeTex, fs_UV).w;
+
 if(abs(type - .2) < epsilon || abs(type - .3) < epsilon) {
     out_Col = texture(u_frame, fs_UV);
     return;

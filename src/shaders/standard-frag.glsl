@@ -99,9 +99,10 @@ void main() {
         col = vec4(wallCol, 1.0);
     } else if (abs(fs_Type - .4) < epsilon) { // cloud
         col = vec4(1.0);
-    } else if (fs_Type == 4.0) { // cloud
-        float heightField = fbm(fs_Nor.brg);
-        col = fs_Col;
+    } else if (abs(fs_Type - .5) < epsilon) { // tree branch
+        col = texture(tex_Color3, fs_UV);
+    } else if (abs(fs_Type - .6) < epsilon) { // leaves
+        col = texture(tex_Color4, fs_UV);
     }
     
 

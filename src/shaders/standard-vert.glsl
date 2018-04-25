@@ -117,13 +117,15 @@ void computeGround() {
         val = trilinearInterpolation(pos);
         vec3 random = random3(vs_Pos.rgb);
         if(val > 0.f) {
+            //tallest mountains
             if(vs_Pos.z < -600.f) {
-                summedNoise += val * amplitude * 80.f;
+                summedNoise += val * amplitude * 90.f;
             }
+            //less tall mountains
             else if(vs_Pos.z < -400.f) {
                 summedNoise += val * amplitude * 50.f;
             }
-            
+            //scale base terrain
             else {
                  summedNoise += val * amplitude * 10.f;
         

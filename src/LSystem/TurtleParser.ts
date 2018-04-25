@@ -23,8 +23,8 @@ class TurtleParser {
         this.currTurtle = curr;
         this.turtleHead = null;
         this.renderGrammar = new Map<string, Function>();
-        this.branchS = readTextFile('./resources/obj/branch1OBJ.obj');
-        this.leafS = readTextFile('./resources/obj/leaf.obj');
+        this.branchS = readTextFile('./src/resources/obj/branch1OBJ.obj');
+        this.leafS = readTextFile('./src/resources/obj/leaf.obj');
     }
 
 
@@ -49,19 +49,12 @@ class TurtleParser {
     }
 
     createBranch(center: vec3) {
-        var newBranch = new Mesh(this.branchS, center, 5);
-        // newBranch.positions = new Float32Array(this.defaultBranch.positions);
-        // newBranch.normals = new Float32Array(this.defaultBranch.normals);
-        // newBranch.indices = new Uint32Array(this.defaultBranch.indices);
-
+        var newBranch = new Mesh(this.branchS, center, .5);
         return newBranch;
     }
 
     createLeaf(center: vec3) {
-        var newLeaf = new Mesh(this.leafS, center, 6);
-        // newLeaf.positions = new Float32Array(this.defaultLeaf.positions);
-        // newLeaf.normals = new Float32Array(this.defaultLeaf.normals);
-        // newLeaf.indices = new Uint32Array(this.defaultLeaf.indices);
+        var newLeaf = new Mesh(this.leafS, center, .6);
         return newLeaf;
     }
 
