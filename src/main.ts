@@ -166,16 +166,16 @@ function loadScene() {
   ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
   ground.create();
 
-  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), 1);
+  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), .1);
   alpaca.create();
 
-  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), 2);
+  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), .2);
   frame.create();
 
-  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), 3);
+  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), .3);
   wall.create();
 
-  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), 4);
+  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), .4);
   cloud.create();
 
   
@@ -234,7 +234,14 @@ function main() {
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
-
+  
+  clouds.update(timer.currentTime);
+  clouds.setData();
+  let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+  let colors: Float32Array = new Float32Array(clouds.getColors());
+  cloud.setInstanceVBOs(offsets, colors);
+  let n = clouds.getNumParticles();
+  cloud.setNumInstances(n * n);
 
   const renderer = new OpenGLRenderer(canvas, vec4.fromValues(light.position[0], light.position[1], light.position[2], 1));
   renderer.setClearColor(0, 0, 0, 1);
@@ -250,6 +257,11 @@ function main() {
       new Shader(gl.VERTEX_SHADER, require('./shaders/shadow-vert.glsl')),
       new Shader(gl.FRAGMENT_SHADER, require('./shaders/shadow-frag.glsl')),
       ]);
+
+      const cloudDeferred = new ShaderProgram([
+        new Shader(gl.VERTEX_SHADER, require('./shaders/cloud-vert.glsl')),
+        new Shader(gl.FRAGMENT_SHADER, require('./shaders/cloud-frag.glsl')),
+        ]);
 
 
   standardDeferred.setupTexUnits(["tex_Color0"]);
@@ -270,6 +282,15 @@ function main() {
 
   function tick() {
     camera.update();
+
+
+    clouds.update(timer.currentTime);
+    clouds.setData();
+    let offsets: Float32Array = new Float32Array(clouds.getOffsets());
+    let colors: Float32Array = new Float32Array(clouds.getColors());
+    cloud.setInstanceVBOs(offsets, colors);
+    let n = clouds.getNumParticles();
+    cloud.setNumInstances(n * n);
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);

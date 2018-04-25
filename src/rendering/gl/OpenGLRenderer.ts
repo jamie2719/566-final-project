@@ -73,7 +73,7 @@ class OpenGLRenderer {
     this.lightPos = lightPos;
 
     this.currentTime = 0.0;
-    this.gbTargets = [undefined, undefined, undefined];
+    this.gbTargets = [undefined, undefined, undefined, undefined];
     this.post8Buffers = [undefined, undefined];
     this.post8Targets = [undefined, undefined];
     this.post8Passes = [];
@@ -102,13 +102,15 @@ class OpenGLRenderer {
     var gb2loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb2");
     var gb3loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb3");
     var shadowMapTex = gl.getUniformLocation(this.deferredShader.prog, "shadowMapTex");
+    var cloudTex = gl.getUniformLocation(this.deferredShader.prog, "cloudTex");
 
     this.deferredShader.use();
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
-    gl.uniform1i(gb3loc, 3);
-    gl.uniform1i(shadowMapTex, 4);
+    gl.uniform1i(cloudTex, 3);
+    gl.uniform1i(shadowMapTex, 5);
+
 
     var typeTex = gl.getUniformLocation(this.brushStrokes.prog, "u_typeTex");
     this.brushStrokes.use();
@@ -165,7 +167,7 @@ class OpenGLRenderer {
     // refresh the gbuffers
     this.gBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
 
     for (let i = 0; i < this.gbTargets.length; i ++) {
       this.gbTargets[i] = gl.createTexture();
@@ -328,6 +330,35 @@ class OpenGLRenderer {
 
   }
 
+  // render clouds in separate pass
+  renderCloudsToGBuffer(camera: Camera, cloudProg: ShaderProgram, drawables: Array<Drawable>) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.enable(gl.DEPTH_TEST);
+
+    let model = mat4.create();
+    let viewProj = mat4.create();
+    let view = camera.viewMatrix;
+    let proj = camera.projectionMatrix;
+    let color = vec4.fromValues(0.5, 0.5, 0.5, 1);
+
+    mat4.identity(model);
+    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+    cloudProg.setModelMatrix(model);
+    cloudProg.setViewProjMatrix(viewProj);
+    cloudProg.setGeometryColor(color);
+    cloudProg.setViewMatrix(view);
+    cloudProg.setProjMatrix(proj);
+
+    cloudProg.setTime(this.currentTime);
+
+    for (let drawable of drawables) {
+      cloudProg.draw(drawable);
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
   renderFromGBuffer(camera: Camera, light: Light) {
         // set var for deferred render
     
@@ -353,7 +384,7 @@ class OpenGLRenderer {
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[i]);
     }
-    gl.activeTexture(gl.TEXTURE4);
+    gl.activeTexture(gl.TEXTURE5);
     gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
 
     this.deferredShader.draw();

@@ -87,22 +87,23 @@ void main() {
     vec4 pos = u_View * u_Model * fs_Pos;
 
     vec4 col;
+
+    float epsilon = .001;
     if(fs_Type == 0.0) { //terrain
         col = vec4(terrainCol(), 1.0);
-    } else if(fs_Type == 1.0){ //alpaca
+    } else if(abs(fs_Type - .1) < epsilon){
         col = texture(tex_Color0, fs_UV);
-    } else if (fs_Type == 2.0) { //frame
+    } else if (abs(fs_Type - .2) < epsilon) {
         col = texture(tex_Color1, fs_UV);
-    } else if (fs_Type == 3.0) { //wall
+    } else if (abs(fs_Type - .3) < epsilon) {
         col = vec4(wallCol, 1.0);
+    } else if (abs(fs_Type - .4) < epsilon) { // cloud
+        col = vec4(1.0);
     } else if (fs_Type == 4.0) { // cloud
         float heightField = fbm(fs_Nor.brg);
         col = fs_Col;
-    } else if (fs_Type == 5.0) { //tree
-        col = texture(tex_Color3, fs_UV);
-    } else if (fs_Type == 6.0) { //leaf
-        col = texture(tex_Color4, fs_UV);
     }
+    
 
     // if using textures, inverse gamma correct
     col.rgb = pow(col.rgb, vec3(2.2));
