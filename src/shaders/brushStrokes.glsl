@@ -50,7 +50,7 @@ void main() {
     */
 
 float type = texture(u_typeTex, fs_UV).w;
-if(type == 1.0) {
+if(type == 1.0) { //don't apply to frame
     out_Col = texture(u_frame, fs_UV);
     return;
 }
