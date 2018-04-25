@@ -23,8 +23,8 @@ class TurtleParser {
         this.currTurtle = curr;
         this.turtleHead = null;
         this.renderGrammar = new Map<string, Function>();
-        this.branchS = readTextFile('./resources/obj/branch1OBJ.obj');
-        this.leafS = readTextFile('./resources/obj/leaf.obj');
+        this.branchS = readTextFile('./src/resources/obj/branch1OBJ.obj');
+        this.leafS = readTextFile('./src/resources/obj/leaf.obj');
     }
 
 

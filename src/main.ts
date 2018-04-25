@@ -97,9 +97,7 @@ function loadTrees(treeMesh: Mesh) {
   //load in default branch vertex data
   var branchDef = new Mesh(branchS, vec3.fromValues(0, 0, 0), .5);
   var leafDef = new Mesh(leafS, vec3.fromValues(0, 0, 0), .6);
-  var trunk = new Mesh(trunkS, vec3.fromValues(treeMesh.center[0], treeMesh.center[1], treeMesh.center[2]), .5);
-
-  treeMesh.addMeshComponent(trunk);
+ 
   //create first turtle
   var currTurtle = new Turtle(vec3.fromValues(treeMesh.center[0], treeMesh.center[1], treeMesh.center[2]), vec3.fromValues(0, 1, 0), mat4.create());
   //create turtle stack
@@ -121,7 +119,6 @@ function loadOBJText() {
 
   branchS = readTextFile('./src/resources/obj/branch1OBJ.obj');
   leafS = readTextFile('./src/resources/obj/leaf.obj');
-  trunkS = readTextFile('./src/resources/obj/trunk.obj');
 
   frameS = readTextFile('./src/resources/obj/frame.obj');
   
