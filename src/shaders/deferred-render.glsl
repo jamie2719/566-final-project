@@ -12,6 +12,7 @@ const float TWO_PI = 6.28318530718;
 uniform sampler2D u_gb0;
 uniform sampler2D u_gb1;
 uniform sampler2D u_gb2;
+uniform sampler2D cloudTex;
 uniform sampler2D shadowMapTex;
 
 uniform mat4 u_ShadowMat;
@@ -96,7 +97,8 @@ void main() {
 		return;
 	}
     // 1 corresponds to frame/wall? 
-	if(!isVisible(fs_Nor.w) && type != 1.0 && type != 2.0) {
+    bool isWall = abs(type - .2) > .002;
+	if(!(isVisible(fs_Nor.w))) {
 		out_Col = diffuseColor * 0.5;  
 	} else {
 		out_Col = vec4(diffuseColor.xyz, 1.0);
@@ -123,6 +125,7 @@ void main() {
     if (camDist > maxFogDist) {
         out_Col = fogColor;
     }
+
     
 }
 

@@ -14,11 +14,13 @@ uniform sampler2D u_typeTex;
 // Interpolation between color and greyscale over time on left half of screen
 void main() {
 
+float epsilon = .01;
 float type = texture(u_typeTex, fs_UV).w;
-if(type == 1.0) {
+if(abs(type - .2) < epsilon || abs(type - .3) < epsilon) {
     out_Col = texture(u_frame, fs_UV);
     return;
 }
+
 // paint filter
 
     int radius = 8;

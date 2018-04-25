@@ -85,18 +85,19 @@ void main() {
     vec4 pos = u_View * u_Model * fs_Pos;
 
     vec4 col;
+    float epsilon = .001;
     if(fs_Type == 0.0) {
         col = vec4(terrainCol(), 1.0);
-    } else if(fs_Type == 1.0){
+    } else if(abs(fs_Type - .1) < epsilon){
         col = texture(tex_Color0, fs_UV);
-    } else if (fs_Type == 2.0) {
+    } else if (abs(fs_Type - .2) < epsilon) {
         col = texture(tex_Color1, fs_UV);
-    } else if (fs_Type == 3.0) {
+    } else if (abs(fs_Type - .3) < epsilon) {
         col = vec4(wallCol, 1.0);
-    } else if (fs_Type == 4.0) { // cloud
-        float heightField = fbm(fs_Nor.brg);
-        col = fs_Col;
+    } else if (abs(fs_Type - .4) < epsilon) { // cloud
+        col = vec4(1.0);
     }
+    
 
     // if using textures, inverse gamma correct
     col.rgb = pow(col.rgb, vec3(2.2));

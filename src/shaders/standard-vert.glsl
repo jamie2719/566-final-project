@@ -90,7 +90,7 @@ void main()
     if(vs_Type == 0.0) {
         computeGround();
         return;
-    } else if (vs_Type == 4.0) {
+    } else if (abs(vs_Type - .4) < .001) {
         computeCloud();
         return;
     }

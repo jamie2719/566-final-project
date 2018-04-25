@@ -119,16 +119,16 @@ function loadScene() {
   ground = new Mesh(groundS, vec3.fromValues(0, 0, 0), 0);
   ground.create();
 
-  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), 1);
+  alpaca = new Mesh(alpacaS, vec3.fromValues(0, 0, 0), .1);
   alpaca.create();
 
-  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), 2);
+  frame = new Mesh(frameS, vec3.fromValues(0, 0, 0), .2);
   frame.create();
 
-  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), 3);
+  wall = new Mesh(wallS, vec3.fromValues(0, 0, 0), .3);
   wall.create();
 
-  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), 4);
+  cloud = new Mesh(cloudS, vec3.fromValues(0, 0, 0), .4);
   cloud.create();
 
   
@@ -204,6 +204,11 @@ function main() {
       new Shader(gl.FRAGMENT_SHADER, require('./shaders/shadow-frag.glsl')),
       ]);
 
+      const cloudDeferred = new ShaderProgram([
+        new Shader(gl.VERTEX_SHADER, require('./shaders/cloud-vert.glsl')),
+        new Shader(gl.FRAGMENT_SHADER, require('./shaders/cloud-frag.glsl')),
+        ]);
+
 
   standardDeferred.setupTexUnits(["tex_Color0"]);
   standardDeferred.setupTexUnits(["tex_Color1"]);
@@ -221,6 +226,7 @@ function main() {
 
   function tick() {
     camera.update();
+
 
     clouds.update(timer.currentTime);
     clouds.setData();
@@ -250,6 +256,7 @@ function main() {
     // forward render mesh info into gbuffers
 
     renderer.renderToGBuffer(camera, light, standardDeferred, shadowDeferred, [alpaca, ground, frame, wall, cloud]);
+    renderer.renderCloudsToGBuffer(camera, cloudDeferred, [cloud]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera, light);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
