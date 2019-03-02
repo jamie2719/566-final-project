@@ -304,7 +304,7 @@ class ShaderProgram {
     }
 
     d.bindIdx();
-    gl.drawElementsInstanced(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0, 4);
+    gl.drawElementsInstanced(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0, 16);
 
     if (this.attrType != -1) gl.disableVertexAttribArray(this.attrType);
     if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);

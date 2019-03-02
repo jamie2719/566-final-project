@@ -16,10 +16,6 @@ class OpenGLRenderer {
                              // gbTargets[0] to store 32-bit values, while the rest
                              // of the array stores 8-bit values. You can modify
                              // this if you want more 32-bit storage.
-  shadowBuffer: WebGLFramebuffer;
-  shadowTexture: WebGLTexture;
-  shadowDepthTexture: WebGLTexture;
-  shadowTexDimensions: number = 1024.0;
 
   depthTexture: WebGLTexture; // You don't need to interact with this, it's just
                               // so the OpenGL pipeline can do depth sorting
@@ -48,14 +44,6 @@ class OpenGLRenderer {
     new Shader(gl.FRAGMENT_SHADER, require('../../shaders/tonemap-frag.glsl'))
     );
 
-  brushStrokes :  PostProcess = new PostProcess(
-    new Shader(gl.FRAGMENT_SHADER, require('../../shaders/brushStrokes.glsl'))
-  );
-
-  occlusionPass :  PostProcess = new PostProcess(
-    new Shader(gl.FRAGMENT_SHADER, require('../../shaders/occlusionPrePass.glsl'))
-  );
-
   lightPos: vec4 = vec4.fromValues(4, 4, 4, 1);
 
 
@@ -82,12 +70,7 @@ class OpenGLRenderer {
     this.post32Targets = [undefined, undefined];
     this.post32Passes = [];
 
-    // TODO: these are placeholder post shaders, replace them with something good
-    this.add8BitPass(this.brushStrokes);
-    this.add8BitPass(this.occlusionPass);
-
     this.deferredShader.setLightPos(this.lightPos);
-    this.occlusionPass.setLightPos(this.lightPos);
     
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -101,20 +84,11 @@ class OpenGLRenderer {
     var gb1loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb1");
     var gb2loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb2");
     var gb3loc = gl.getUniformLocation(this.deferredShader.prog, "u_gb3");
-    var shadowMapTex = gl.getUniformLocation(this.deferredShader.prog, "shadowMapTex");
-    var cloudTex = gl.getUniformLocation(this.deferredShader.prog, "cloudTex");
 
     this.deferredShader.use();
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
-    gl.uniform1i(cloudTex, 3);
-    gl.uniform1i(shadowMapTex, 5);
-
-
-    var typeTex = gl.getUniformLocation(this.brushStrokes.prog, "u_typeTex");
-    this.brushStrokes.use();
-    gl.uniform1i(typeTex, 1);
 
   }
 
@@ -123,45 +97,8 @@ class OpenGLRenderer {
   }
 
   setSize(width: number, height: number) {
-    console.log(width, height);
     this.canvas.width = width;
     this.canvas.height = height;
-
-    // SHADOW MAP CREATION START
-    this.shadowBuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-    this.shadowTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
-    
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, this.shadowTexDimensions, this.shadowTexDimensions, 0, gl.RGBA , gl.FLOAT, null);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.shadowTexture, 0);
-
-    this.shadowDepthTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, this.shadowDepthTexture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, this.shadowTexDimensions, this.shadowTexDimensions, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.shadowDepthTexture, 0);
-
-
-
-    var FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-        console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use FBO[0]\n");
-    }
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    /// END SHADOW MAP BUFFER SET UP
-
 
     // --- GBUFFER CREATION START ---
     // refresh the gbuffers
@@ -273,7 +210,7 @@ class OpenGLRenderer {
   }
 
 
-  renderToGBuffer(camera: Camera, light: Light, gbProg: ShaderProgram, shadowProg: ShaderProgram, drawables: Array<Drawable>) {
+  renderToGBuffer(camera: Camera, light: Light, gbProg: ShaderProgram, drawables: Array<Drawable>) {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -299,68 +236,12 @@ class OpenGLRenderer {
       gbProg.draw(drawable);
     }
 
-    //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // do same thing but from the light camera
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-    
-    gl.viewport(0, 0, this.shadowTexDimensions, this.shadowTexDimensions);
-    gl.enable(gl.DEPTH_TEST);
-
-    this.clear();
-
-
-    let modelL = mat4.create();
-    //let viewProjL = mat4.create();
-    let viewL = light.viewMatrix;
-    let projL = light.orthogonalMatrix;
-    let colorL = vec4.fromValues(0.5, 0.5, 0.5, 1);
-
-    mat4.identity(modelL);
-    shadowProg.setModelMatrix(modelL);
-    shadowProg.setViewProjOrthoMat(light.viewOrhtProjMatrix);
-
-    shadowProg.setTime(this.currentTime);
-
-    for (let drawable of drawables) {
-      shadowProg.draw(drawable);
-    }
-
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-  }
-
-  // render clouds in separate pass
-  renderCloudsToGBuffer(camera: Camera, cloudProg: ShaderProgram, drawables: Array<Drawable>) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.enable(gl.DEPTH_TEST);
-
-    let model = mat4.create();
-    let viewProj = mat4.create();
-    let view = camera.viewMatrix;
-    let proj = camera.projectionMatrix;
-    let color = vec4.fromValues(0.5, 0.5, 0.5, 1);
-
-    mat4.identity(model);
-    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
-    cloudProg.setModelMatrix(model);
-    cloudProg.setViewProjMatrix(viewProj);
-    cloudProg.setGeometryColor(color);
-    cloudProg.setViewMatrix(view);
-    cloudProg.setProjMatrix(proj);
-
-    cloudProg.setTime(this.currentTime);
-
-    for (let drawable of drawables) {
-      cloudProg.draw(drawable);
-    }
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   renderFromGBuffer(camera: Camera, light: Light) {
-        // set var for deferred render
+    // set var for deferred render
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[0]);
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -379,13 +260,10 @@ class OpenGLRenderer {
     this.deferredShader.setLightViewMatrix(light.viewMatrix);
     this.deferredShader.setCamPos(vec4.fromValues(camera.position[0], camera.position[1], camera.position[2], 1));
 
-
     for (let i = 0; i < this.gbTargets.length; i ++) {
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[i]);
     }
-    gl.activeTexture(gl.TEXTURE5);
-    gl.bindTexture(gl.TEXTURE_2D, this.shadowTexture);
 
     this.deferredShader.draw();
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -442,7 +320,6 @@ class OpenGLRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[Math.max(0, i) % 2]);
 
     this.tonemapPass.draw();
-
   }
 
 
