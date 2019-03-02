@@ -1,9 +1,21 @@
 # Final Project
 **Jamie Schwartz and Kathryn Miller** 
 
-## Milestone 1
+## Final Submission
 ## Demo: https://jamie2719.github.io/566-final-project/
-This demo link doesn't actually work yet because of the same issue people were having in the deferred renderer homework where the textures couldn't be loaded (we used the base code from that homework)- images are below
+
+**Jamie**
+
+This week, I added L-system trees to the scene. I had a lot of trouble getting the rotations and turtles to work completely correctly- for a while I had a bug where the turtles' rotations were not being reset properly after being popped off the stack. When I finally got the L-system to work on the simple broccoli grammar, I tried to make the grammar more complex by adding an element of randomness. Now, at each iteration, there are different probabilities for the character "F" (move forward and draw a branch) to be replaced by different combinations of sub-branches with different angles. This randomness added some more variability to the trees. I generated 5 trees in the scene overall, each with random positions. Because of the randomness in the positions and in the generation of the trees themselves, each of these trees will be slightly different from the others, and the trees will be slightly different each time the scene is reloaded. I also adjusted the colors of the terrain so they would fit more with the rest of the scene. I added a condition in the terrain generator that scaled the height of the terrain based on the z coordinate of the position; this way, the terrain in the far background would be taller mountains, and the terrain would get progressively flatter as it got closer to the frame in the foreground, which added more variation to the scene.
+
+**Kathryn**
+
+This week I added the other features to the scene, like the frame, wall, and sky. I bought the frame for a whopping $1.60 and extended placed it on a plane to occlude the rest of the scene from the viewer's initial standpoint. The sky is raycasted to whatever points on the screen are not covered by a mesh and has fbm noise to give a bit of offset to the subtle color gradient (although this is less visible with the mountains and clouds now). I then extended the ground of the "painting" and applied a distance fog in the color of the sky clouds to make it seem more infinite. The last thing I did was add instanced clouds to the scene. Each cloud is an ellipsoid obj that I combined with some of the base code from the particles homework to get multiple without completely killing my computer. They are then deformed in the standard-vert shader with some noise that takes into account their translation such that if you look closely, each cloud is slowly morphing over time. I used Verlet integration to give each cloud a random (within some range) velocity in the x direction so they move in and out of frame before looping back. I also fixed a bug we had that only enabled us to apply the paint filter to the ground of our scene.
+
+
+
+## Milestone 1
+Images are below
 
 
 **Jamie**
