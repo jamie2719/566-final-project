@@ -74,13 +74,15 @@ uniform vec4 u_CamPos;
 // 	return true;
 // }
 
-vec4 backgroundCol = vec4(.001, .001, .01, 1);
+//vec4 backgroundCol = vec4(.001, .001, .01, 1);
 
 void main() { 
 	// read from GBuffers
 	vec4 fs_Nor = texture(u_gb0, fs_UV);
 
     float type = texture(u_gb2, fs_UV).w;
+
+	vec4 col = vec4(texture(u_gb2, fs_UV).xyz, 1.0);
 	
 	vec4 meshOverlap = texture(u_gb1, fs_UV);
 
@@ -96,7 +98,7 @@ void main() {
 	float lightIntensity = diffuseTerm + ambientTerm; 
 
 	if(meshOverlap.xyz != vec3(1.0)) {
-		out_Col = backgroundCol;
+		out_Col = col;
 		return;
 	}
     // 1 corresponds to frame/wall? 

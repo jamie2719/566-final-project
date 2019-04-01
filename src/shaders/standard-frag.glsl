@@ -48,7 +48,7 @@ void main() {
     } else if (abs(fs_Type - .3) < epsilon) {
         col = texture(tex_Color4, fs_UV);
     } else {
-        col = vec4(1, 1, 1, 1);
+        col = fs_Col;
     }
 
     // if using textures, inverse gamma correct

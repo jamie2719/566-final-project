@@ -28,10 +28,11 @@ class Floors extends Drawable{
         } else if (bevelNum == 4) {
             block = this.block4;
         }
+        let color = vec4.fromValues(1, 0, 1, 1);
         if(this.mesh == null) {
-            this.mesh = new Mesh(block, worldPos, scale, rotate, 0.2);
+            this.mesh = new Mesh(block, worldPos, scale, rotate, color, 0.5);
         } else {
-            let newMesh = new Mesh(block, worldPos, scale, rotate, 0.2);
+            let newMesh = new Mesh(block, worldPos, scale, rotate, color, 0.5);
             this.mesh.addMeshComponent(newMesh);
         }
     }

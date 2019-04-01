@@ -20,7 +20,7 @@ class Mesh extends Drawable {
 
   objString: string;
 
-  constructor(objString: string, center: vec3, scale: vec3, rotation: vec3, type: number) {
+  constructor(objString: string, center: vec3, scale: vec3, rotation: vec3, color: vec4, type: number) {
     super(); // Call the constructor of the super class. This is required.
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
     this.type = type;
@@ -28,7 +28,6 @@ class Mesh extends Drawable {
 
     var loadedMesh = new Loader.Mesh(this.objString);
 
-    //posTemp = loadedMesh.vertices;
     for (var i = 0; i < loadedMesh.vertices.length; i+=3) {
       let pos = vec4.fromValues(loadedMesh.vertices[i], loadedMesh.vertices[i + 1], loadedMesh.vertices[i + 2], 1);
       let nor = vec4.fromValues(loadedMesh.vertexNormals[i], loadedMesh.vertexNormals[i + 1], loadedMesh.vertexNormals[i + 2], 0);
@@ -51,9 +50,13 @@ class Mesh extends Drawable {
     this.idxTemp = loadedMesh.indices;
 
     // white vert color for now
-    for (var i = 0; i < this.posTemp.length; ++i){
-      this.colTemp[i] = 1.0;
+    for (var i = 0; i < this.posTemp.length; i+=4){
+      this.colTemp[i] = color[0];
+      this.colTemp[i + 1] = color[1];
+      this.colTemp[i + 2] = color[2];
+      this.colTemp[i + 3] = color[3];
     }
+    console.log(this.posTemp.length);
 
     for (var i = 0; i < this.posTemp.length / 4.0; ++i){
       this.typeTemp.push(this.type);

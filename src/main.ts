@@ -15,7 +15,7 @@ import Texture from './rendering/gl/Texture';
 import Building from './Building'
 
 const controls = {
-  div: 2,
+  div: 4,
 
   dimX: 10,
   dimY: 10,
