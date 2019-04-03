@@ -45,7 +45,6 @@ class Mesh extends Drawable {
       this.posTemp.push(pos[0], pos[1], pos[2], 1.0);
       this.norTemp.push(nor[0], nor[1], nor[2], 0.0);
     }
-
     this.uvsTemp = loadedMesh.textures;
     this.idxTemp = loadedMesh.indices;
 
@@ -56,7 +55,6 @@ class Mesh extends Drawable {
       this.colTemp[i + 2] = color[2];
       this.colTemp[i + 3] = color[3];
     }
-    console.log(this.posTemp.length);
 
     for (var i = 0; i < this.posTemp.length / 4.0; ++i){
       this.typeTemp.push(this.type);

@@ -15,12 +15,8 @@ import Texture from './rendering/gl/Texture';
 import Building from './Building'
 
 const controls = {
-  div: 4,
-
-  dimX: 10,
-  dimY: 10,
-  dimZ: 10,
-
+  Divisions: 4,
+  Height: 50,
   Density: 70,
 
   Reload: function() {loadScene()}
@@ -68,9 +64,8 @@ function loadScene() {
   building.floors.block2 = box2S;
   building.floors.block4 = box4S;
   building.floors.window1 = window1S;
-  //building.passObjs();
-  building.build(vec3.fromValues(controls.dimX.valueOf(), controls.dimY.valueOf(), controls.dimZ.valueOf()),
-        controls.div.valueOf(),
+  building.build(controls.Height.valueOf(),
+        controls.Divisions.valueOf(),
         controls.Density.valueOf());
 }
 
@@ -87,14 +82,8 @@ function main() {
 
   // add controls to gui
   const gui = new DAT.GUI();
-  var divisions = gui.addFolder('Divisions');
-  divisions.add(controls, 'div', 1.0, 10.0).step(1.0);
-
-  var dimensions = gui.addFolder('Dimensions');
-  dimensions.add(controls, 'dimX', 1.0, 30.0).step(1.0);
-  dimensions.add(controls, 'dimY', 1.0, 30.0).step(1.0);
-  dimensions.add(controls, 'dimZ', 1.0, 30.0).step(1.0);
-
+  gui.add(controls, 'Divisions', 1.0, 10.0).step(1.0);
+  gui.add(controls, 'Height', 1.0, 100.0).step(1.0);
   gui.add(controls, 'Density', 0.0, 100.0).step(1.0);
   gui.add(controls, 'Reload');
 
@@ -111,7 +100,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 10, 30), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(0, 10, 20), vec3.fromValues(0, 0, 0));
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();

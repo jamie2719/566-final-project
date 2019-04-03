@@ -28,7 +28,7 @@ class Floors extends Drawable{
         } else if (bevelNum == 4) {
             block = this.block4;
         }
-        let color = vec4.fromValues(1, 0, 1, 1);
+        let color = vec4.fromValues(Math.random() * 1, 0, Math.random() * 1, 1);
         if(this.mesh == null) {
             this.mesh = new Mesh(block, worldPos, scale, rotate, color, 0.5);
         } else {
@@ -43,7 +43,6 @@ class Floors extends Drawable{
 
     create() {
         if (this.mesh != null) {
-            console.log("HAS MESH")
             this.mesh.create();
         }  
     }
