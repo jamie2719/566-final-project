@@ -254,7 +254,7 @@ class OpenGLRenderer {
     this.deferredShader.setViewMatrix(view);
     this.deferredShader.setProjMatrix(proj);
 
-    this.deferredShader.setInvViewProjMatrix(camera.invViewProjMatrix);
+   // this.deferredShader.setInvViewProjMatrix(camera.invViewProjMatrix);
     this.deferredShader.setViewProjOrthoMat(light.viewOrhtProjMatrix);
     this.deferredShader.setLightOrthoMatrix(light.orthogonalMatrix);
     this.deferredShader.setLightViewMatrix(light.viewMatrix);
@@ -334,7 +334,7 @@ class OpenGLRenderer {
       if (i < this.post8Passes.length - 1) gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[(i + 1) % 2]);
       else gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-      this.post8Passes[i].setInvViewProjMatrix(camera.invViewProjMatrix);
+      //this.post8Passes[i].setInvViewProjMatrix(camera.invViewProjMatrix);
       this.post8Passes[i].setViewMatrix(camera.viewMatrix);
       this.post8Passes[i].setCamPos(vec4.fromValues(camera.position[0], camera.position[1], camera.position[2], 1));
 

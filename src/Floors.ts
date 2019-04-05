@@ -20,15 +20,20 @@ class Floors extends Drawable{
     }
 
     buildFloor(gridPos: vec3, worldPos: vec3, rotate: vec3, scale: vec3, bevelNum: number) {
+        let color = vec4.create();
         let block = this.block0;
         if (bevelNum == 1) {
             block = this.block1;
+            color = vec4.fromValues(1, 0, 0, 1);
+            
         } else if (bevelNum == 2) {
             block = this.block2;
+            color = vec4.fromValues(.67, 0, 0, 1);
         } else if (bevelNum == 4) {
             block = this.block4;
+            color = vec4.fromValues(.33, 0, 0, 1);
         }
-        let color = vec4.fromValues(Math.random() * 1, 0, Math.random() * 1, 1);
+        
         if(this.mesh == null) {
             this.mesh = new Mesh(block, worldPos, scale, rotate, color, 0.5);
         } else {

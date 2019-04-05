@@ -10,7 +10,7 @@ class Building extends Drawable {
     numBlocks: number = 0;
     floors: Floors;
     divisions: number;
-    width: number = 10;
+    width: number = 20;
     // total 3d max size of building
     height: number;
     scale: vec3;
@@ -31,6 +31,7 @@ class Building extends Drawable {
     hasBlock(x: number, y: number, z: number) : boolean {
         let index  = y * this.divisions + x + z * this.divisions * this.divisions;
         if (index > this.grid.length) {
+            console.log("outside bounds");
             return false;
         }
         return !(this.grid[index] == -1);
@@ -53,18 +54,33 @@ class Building extends Drawable {
 
     // prob: probability that a block will be placed in the current block
     buildBase(prob: number) {
+        /*
         let numBlocks = 0;
         for(let i = 0; i < this.divisions; i++) {
             for (let j = 0; j < this.divisions; j++) {
                 let rand = Math.random();
                 if (rand <= prob / 100.0) {
-                    let scaleX = Math.floor(Math.random() * this.width / 2.0);
-                    let scaleY = Math.floor(Math.random() * this.height) * 1.0;
-                    let scaleZ = scaleX;
-                    scaleX = Math.min(Math.max(2.0, scaleX), this.width);
-                    scaleY = Math.min(Math.max(this.height / 6.0, scaleY), this.height);
-                    scaleZ = scaleX;
-                    this.placeBlock(i, 0, j, scaleY);
+                    if(!this.hasBlock(i, 0, j)) {
+                        let scaleX = Math.floor(Math.random() * (this.width / this.divisions / 7.0));
+                        let scaleY = Math.floor(Math.random() * (this.height/ (Math.random() * this.divisions))) * 1.0;
+                        let scaleZ = scaleX;
+                        scaleX = Math.min(Math.max(2.0, scaleX), this.width);
+                        //scaleY = Math.min(Math.max(this.height / 6.0, scaleY), this.height);
+                        scaleZ = scaleX;
+                        for(let x = 0; x < scaleX; x++) {
+                            for (let z = 0; z < scaleZ; z++) {
+                                if(!this.hasBlock(i + x, 0, j + z)) {
+                                    this.placeBlock(i + x, 0, j + z, scaleY);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for(let i = 0; i < this.divisions; i++) {
+            for(let j = 0; j < this.divisions; j++) {
+                if(this.hasBlock(i, 0, j)) {
                     let gridPos = vec3.fromValues(i, 0, j);
                     let worldPos = this.calcWorldPos(gridPos);
                     let rotData = this.getBoxRotation(gridPos);
@@ -74,7 +90,40 @@ class Building extends Drawable {
                     numBlocks++;
                 }
             }
-        }
+        }  
+        */
+        this.placeBlock(0, 0, 0, 1);
+        this.placeBlock(1, 0, 0, 1);
+        this.placeBlock(1, 0, 1, 1);
+        this.placeBlock(0, 0, 1, 1);
+        let gridPos = vec3.fromValues(0, 0, 0);
+        let worldPos = this.calcWorldPos(gridPos);
+        let rotData = this.getBoxRotation(gridPos);
+        let rotation = vec3.fromValues(rotData[0], rotData[1], rotData[2]);
+        this.floors.buildFloor(gridPos, worldPos, vec3.create(), 
+        vec3.fromValues(1, 1, 1), rotData[3]);
+        
+
+        gridPos = vec3.fromValues(0, 0, 1);
+        worldPos = this.calcWorldPos(gridPos);
+        rotData = this.getBoxRotation(gridPos);
+        rotation = vec3.fromValues(rotData[0], rotData[1], rotData[2]);
+        this.floors.buildFloor(gridPos, worldPos, vec3.create(), 
+        vec3.fromValues(1, 1, 1), rotData[3]);
+
+        gridPos = vec3.fromValues(1, 0, 0);
+        worldPos = this.calcWorldPos(gridPos);
+        rotData = this.getBoxRotation(gridPos);
+        rotation = vec3.fromValues(rotData[0], rotData[1], rotData[2]);
+        this.floors.buildFloor(gridPos, worldPos, vec3.create(), 
+        vec3.fromValues(1, 1, 1), rotData[3]);
+
+        gridPos = vec3.fromValues(1, 0, 1);
+        worldPos = this.calcWorldPos(gridPos);
+        rotData = this.getBoxRotation(gridPos);
+        rotation = vec3.fromValues(rotData[0], rotData[1], rotData[2]);
+        this.floors.buildFloor(gridPos, worldPos, vec3.create(), 
+        vec3.fromValues(1, 1, 1), rotData[3]);
     }
 
     buildUp() {
@@ -107,18 +156,21 @@ class Building extends Drawable {
         if (this.hasBlock(x, y, z - 1) || 
             this.hasBlock(x - 1, y, z - 1) || 
             this.hasBlock(x - 1, y, z)) {
+            console.log("CORNER 0");
             corner0 = false;
             sum--;
         }
         if (this.hasBlock(x, y, z + 1) || 
             this.hasBlock(x - 1, y, z + 1) || 
             this.hasBlock(x - 1, y, z)) {
+            console.log("CORNER 1");
             corner1 = false;
             sum--;
         }
         if (this.hasBlock(x + 1, y, z) || 
             this.hasBlock(x + 1, y, z + 1) || 
             this.hasBlock(x, y, z + 1)) {
+            console.log("CORNER 2");
             corner2 = false;
             sum--;
         }
@@ -126,10 +178,11 @@ class Building extends Drawable {
         if (this.hasBlock(x, y, z - 1) || 
             this.hasBlock(x + 1, y, z - 1) || 
             this.hasBlock(x + 1, y, z)) {
+            console.log("CORNER 3");
             corner3 = false;
             sum--;
         }
-
+        console.log(" ");
         if (sum == 0) {
             data.push(0, 0, 0, 0);
         } else if (sum == 1) {
@@ -168,7 +221,7 @@ class Building extends Drawable {
         this.divisions = divisions;
         this.grid = new Array<number>(this.divisions * this.divisions * this.divisions).fill(-1);
         this.buildBase(prob);
-        this.buildUp();
+        //this.buildUp();
         this.destroy();
         this.create();
     }

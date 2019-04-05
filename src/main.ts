@@ -15,9 +15,9 @@ import Texture from './rendering/gl/Texture';
 import Building from './Building'
 
 const controls = {
-  Divisions: 4,
-  Height: 50,
-  Density: 70,
+  Divisions: 4,//8,
+  Height: 4,//30,
+  Density: 100,//70,
 
   Reload: function() {loadScene()}
 };
@@ -82,7 +82,7 @@ function main() {
 
   // add controls to gui
   const gui = new DAT.GUI();
-  gui.add(controls, 'Divisions', 1.0, 10.0).step(1.0);
+  gui.add(controls, 'Divisions', 1.0, 20.0).step(1.0);
   gui.add(controls, 'Height', 1.0, 100.0).step(1.0);
   gui.add(controls, 'Density', 0.0, 100.0).step(1.0);
   gui.add(controls, 'Reload');
@@ -100,7 +100,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 10, 20), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(0, 5, 10), vec3.fromValues(0, 0, 0));
   const light = new Light(vec3.fromValues(5, 10, 5), vec3.create());
   light.update();
   light.updateProjectionMatrix();
